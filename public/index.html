@@ -9,14 +9,14 @@
   <link rel="apple-touch-icon" href="/icons/icon-180.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="description" content="Hippo Conecta — comunicação em tempo real, servidores, mensagens e chamadas." />
-  <meta name="hippo-api-base" content="" />
+  <meta name="hippo-api-base" content="https://hippo-conecta.onrender.com" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <title>HIPPO CONECTA</title>
   <link rel="manifest" href="/manifest.json" />
   <link rel="stylesheet" href="/css/tailwind.css" />
-  <script>window.HIPPO_API_BASE = document.querySelector('meta[name="hippo-api-base"]')?.content?.trim() || window.location.origin; document.write(`<script src="${window.HIPPO_API_BASE}/socket.io/socket.io.js"><\/script>`);</script>
+  <script>window.HIPPO_API_BASE = window.hippoDesktop?.isDesktop ? window.location.origin : (document.querySelector('meta[name="hippo-api-base"]')?.content?.trim() || window.location.origin); document.write(`<script src="${window.HIPPO_API_BASE}/socket.io/socket.io.js"><\/script>`);</script>
   <link rel="stylesheet" href="/css/styles.css?v=5.2.0" />
 </head>
 <body class="bg-[#06070a] text-slate-100 antialiased overflow-hidden select-none">
