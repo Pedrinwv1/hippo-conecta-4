@@ -27,7 +27,8 @@ const originPolicy = IS_PROD
   ? (origin, callback) => {
       if (!origin) return callback(null, true);
       const desktopOrigin = process.env.HIPPO_DESKTOP === '1' && /^http:\/\/127\.0\.0\.1:\d+$/.test(origin);
-      if (allowedOrigins.includes(origin) || (sameOriginPublicUrl && origin === sameOriginPublicUrl) || desktopOrigin) return callback(null, true);
+      const capacitorOrigin = origin === 'https://localhost';
+      if (allowedOrigins.includes(origin) || (sameOriginPublicUrl && origin === sameOriginPublicUrl) || desktopOrigin || capacitorOrigin) return callback(null, true);
       return callback(new Error('Origem não permitida pelo CORS.'));
     }
   : (allowedOrigins.length ? allowedOrigins : true);
