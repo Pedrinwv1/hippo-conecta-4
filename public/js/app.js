@@ -1,7 +1,7 @@
 const UI = {
   escapeHTML(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
   openModal(id) { document.getElementById(id)?.classList.remove('hidden'); },
-  safeAvatar(url) { return typeof url === 'string' && /^\/uploads\/avatar-[a-z0-9-]+\.(jpg|png|gif|webp)$/i.test(url) ? url : ''; },
+  safeAvatar(url) { return typeof url === 'string' && (/^\/uploads\/(?:avatars\/)?avatar-[a-z0-9-]+\.(jpg|png|gif|webp)$/i.test(url) || /^https:\/\/fnxddxknngfuqvzawlni\.supabase\.co\/storage\/v1\/object\/public\/hippo-media\/avatars\/avatar-[a-z0-9-]+\.(jpg|png|gif|webp)$/i.test(url)) ? url : ''; },
   setAvatar(id, user, classes = '') { const el = document.getElementById(id); if (!el) return; const url = this.safeAvatar(user?.avatarUrl); el.className = `${classes} overflow-hidden flex items-center justify-center bg-purple-600/30 text-purple-200 font-bold text-xs shrink-0`; el.innerHTML = url ? `<img src="${this.escapeHTML(url)}" alt="Foto de ${this.escapeHTML(user?.name || 'usuário')}" class="w-full h-full object-cover">` : this.escapeHTML((user?.name || '?').slice(0, 2).toUpperCase()); },
   closeModals() { if (typeof Settings !== 'undefined') { Settings.stopCameraPreview(); Settings.stopMicTest(); } document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.add('hidden')); },
   toast(msg, type = 'info') {
