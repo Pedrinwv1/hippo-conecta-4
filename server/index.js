@@ -284,9 +284,13 @@ app.post('/api/servers/join', authMiddleware, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-const allowedMime = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf', 'text/plain', 'application/zip']);
+const allowedMime = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf', 'text/plain', 'application/zip', 'application/x-zip-compressed', 'application/x-zip', 'application/octet-stream']);
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 1 }, fileFilter: (req, file, cb) => {
-  if (!allowedMime.has(file.mimetype)) return cb(new Error('Tipo de arquivo não permitido.'));
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  const mimeAllowed = allowedMime.has(file.mimetype);
+  const zipAllowed = ext === '.zip' && ['application/zip', 'application/x-zip-compressed', 'application/x-zip', 'application/octet-stream'].includes(file.mimetype);
+  const textAllowed = ext === '.txt' && ['text/plain', 'application/octet-stream'].includes(file.mimetype);
+  if (!(mimeAllowed && (file.mimetype !== 'application/octet-stream' || zipAllowed || textAllowed))) return cb(new Error('Tipo de arquivo não permitido.'));
   cb(null, true);
 } });
 app.post('/api/uploads', authMiddleware, (req, res, next) => upload.single('file')(req, res, async err => {
