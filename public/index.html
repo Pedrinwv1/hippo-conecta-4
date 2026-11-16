@@ -16,7 +16,7 @@
   <title>HIPPO CONECTA</title>
   <link rel="manifest" href="/manifest.json" />
   <link rel="stylesheet" href="/css/tailwind.css" />
-  <script>window.HIPPO_API_BASE = window.hippoDesktop?.isDesktop ? window.location.origin : (document.querySelector('meta[name="hippo-api-base"]')?.content?.trim() || window.location.origin); document.write(`<script src="${window.HIPPO_API_BASE}/socket.io/socket.io.js"><\/script>`);</script>
+  <script>window.HIPPO_API_BASE = document.querySelector('meta[name="hippo-api-base"]')?.content?.trim() || window.location.origin; document.write(`<script src="${window.HIPPO_API_BASE}/socket.io/socket.io.js"><\/script>`);</script>
   <link rel="stylesheet" href="/css/styles.css?v=5.2.0" />
 </head>
 <body class="bg-[#06070a] text-slate-100 antialiased overflow-hidden select-none">
