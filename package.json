@@ -1,8 +1,8 @@
 {
   "name": "hippo-conecta",
-  "version": "4.0.0-rc.2",
+  "version": "5.2.0",
   "private": true,
-  "description": "HIPPO CONECTA 4.0 — comunicação multiplataforma",
+  "description": "HIPPO CONECTA 5.2 — comunicação multiplataforma",
   "main": "electron/main.js",
   "scripts": {
     "start": "npm run build:css && node server/index.js",
