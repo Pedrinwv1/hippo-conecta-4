@@ -55,6 +55,43 @@ jobs:
         run: npm ci
       - name: Generate Android project
         run: npx cap add android
+      - name: Configure Android permissions and launcher icon
+        shell: bash
+        run: |
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          permissions = [
+              "android.permission.INTERNET",
+              "android.permission.RECORD_AUDIO",
+              "android.permission.CAMERA",
+              "android.permission.MODIFY_AUDIO_SETTINGS",
+          ]
+          for permission in permissions:
+              tag = f'<uses-permission android:name="{permission}" />'
+              if tag not in s:
+                  s = s.replace("<application", f"    {tag}\\n    <application", 1)
+          p.write_text(s)
+          PY
+          ICON="public/icons/icon-512.png"
+          RES="android/app/src/main/res"
+          if command -v magick >/dev/null 2>&1; then IMG=magick; else IMG=convert; fi
+          for spec in "mdpi:48" "hdpi:72" "xhdpi:96" "xxhdpi:144" "xxxhdpi:192"; do
+            density="${spec%%:*}"
+            size="${spec##*:}"
+            dir="$RES/mipmap-$density"
+            mkdir -p "$dir"
+            $IMG "$ICON" -resize "${size}x${size}" "$dir/ic_launcher.png"
+            cp "$dir/ic_launcher.png" "$dir/ic_launcher_round.png"
+          done
+          for dir in "$RES"/mipmap-*; do
+            [ -d "$dir" ] || continue
+            if [ -f "$dir/ic_launcher_foreground.png" ]; then
+              $IMG "$ICON" -resize 80% -gravity center -background none -extent 108x108 "$dir/ic_launcher_foreground.png"
+            fi
+          done
       - name: Sync app assets
         run: npm run android:sync
       - name: Build debug APK
