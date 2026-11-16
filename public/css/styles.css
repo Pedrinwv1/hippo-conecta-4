@@ -731,3 +731,213 @@ input,textarea,select{accent-color:#e8e8e8}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+
+/* =========================================================
+   HIPPO CONECTA 5.3 — MOBILE FIRST RESPONSIVE REBUILD
+   Layout dedicado para celulares: navegação em faixas,
+   áreas roláveis independentes e controles com toque amplo.
+   ========================================================= */
+@media (max-width: 640px) {
+  html, body {
+    width: 100%; height: 100%; min-height: 100%;
+    overflow: hidden !important;
+    overscroll-behavior: none;
+  }
+  body { font-size: 14px; }
+  button, input, select, textarea, label { touch-action: manipulation; }
+  button, [role="button"] { min-height: 40px; }
+  input, select, textarea { font-size: 16px !important; }
+
+  /* Login */
+  #auth-screen { min-height: 100dvh !important; height: 100dvh !important; padding: 18px !important; overflow-y: auto !important; }
+  #auth-screen > div, #auth-screen .auth-card {
+    width: 100% !important; max-width: 430px !important;
+    padding: 25px 20px !important; margin: auto !important;
+    border-radius: 22px !important;
+  }
+  .hc-login-logo { width: min(42vw, 150px) !important; height: min(42vw, 150px) !important; }
+  #auth-screen form { gap: 12px !important; }
+  #auth-screen form input, #auth-screen form button[type="submit"] { min-height: 48px !important; }
+
+  /* Estrutura principal: barra superior + servidores + chat */
+  #app-shell {
+    position: fixed !important; inset: 0 !important;
+    width: 100% !important; height: 100dvh !important; min-height: 0 !important;
+    display: flex !important; flex-direction: column !important;
+    overflow: hidden !important; gap: 0 !important;
+  }
+  #app-shell > nav {
+    order: 1 !important; flex: 0 0 58px !important;
+    width: 100% !important; height: 58px !important; min-height: 58px !important;
+    padding: 7px 10px !important; display: flex !important;
+    flex-direction: row !important; align-items: center !important;
+    justify-content: flex-start !important; gap: 10px !important;
+    overflow: hidden !important; border-right: 0 !important;
+    border-bottom: 1px solid #303030 !important;
+  }
+  #app-shell > nav .hc-side-logo { width: 38px !important; height: 38px !important; flex: 0 0 38px !important; border-radius: 11px !important; }
+  #app-shell > nav > div:not(#server-list) { display: none !important; }
+  #server-list {
+    display: flex !important; flex: 1 1 auto !important; min-width: 0 !important;
+    width: auto !important; height: 44px !important; flex-direction: row !important;
+    align-items: center !important; justify-content: flex-start !important;
+    gap: 7px !important; padding: 0 2px !important; overflow-x: auto !important; overflow-y: hidden !important;
+    scrollbar-width: none !important;
+  }
+  #server-list::-webkit-scrollbar { display: none !important; }
+  #server-list button, #app-shell > nav > button {
+    flex: 0 0 38px !important; width: 38px !important; min-width: 38px !important;
+    height: 38px !important; min-height: 38px !important; padding: 0 !important;
+    border-radius: 12px !important; font-size: 12px !important;
+  }
+  #btn-create-server, #btn-join-server { display: flex !important; align-items: center !important; justify-content: center !important; }
+  #btn-create-server .create-server-label, #btn-join-server small { display: none !important; }
+
+  /* Lista de canais vira uma faixa horizontal, sem esmagar o chat */
+  #app-shell > aside:nth-of-type(1) {
+    order: 2 !important; flex: 0 0 auto !important;
+    display: flex !important; flex-direction: column !important;
+    width: 100% !important; min-width: 0 !important; max-width: none !important;
+    height: auto !important; max-height: 112px !important; min-height: 0 !important;
+    overflow: hidden !important; border-right: 0 !important;
+    border-bottom: 1px solid #303030 !important;
+  }
+  #app-shell > aside:nth-of-type(1) > div:first-child {
+    flex: 0 0 31px !important; height: 31px !important; min-height: 31px !important;
+    padding: 0 12px !important; display: flex !important; align-items: center !important;
+    border-bottom: 1px solid rgba(255,255,255,.045) !important;
+  }
+  #sidebar-title { font-size: 11px !important; }
+  #sidebar-subtitle { margin-left: auto !important; font-size: 9px !important; }
+  #channel-list-container {
+    flex: 1 1 auto !important; min-height: 0 !important; height: auto !important;
+    display: flex !important; flex-direction: row !important; align-items: center !important;
+    gap: 12px !important; padding: 6px 10px !important; overflow-x: auto !important;
+    overflow-y: hidden !important; white-space: nowrap !important;
+  }
+  #channel-list-container > div {
+    display: flex !important; flex: 0 0 auto !important; align-items: center !important;
+    gap: 6px !important; margin: 0 !important;
+  }
+  #channel-list-container > div > p { display: none !important; }
+  #channel-list-container button {
+    display: inline-flex !important; flex: 0 0 auto !important; align-items: center !important;
+    width: auto !important; min-width: max-content !important; min-height: 36px !important;
+    padding: 7px 11px !important; border-radius: 10px !important; font-size: 11px !important;
+  }
+  #voice-status-bar { display: none !important; }
+  #app-shell > aside:nth-of-type(1) > div:last-child {
+    flex: 0 0 38px !important; min-height: 38px !important; height: 38px !important;
+    padding: 4px 10px !important; border-top: 1px solid rgba(255,255,255,.05) !important;
+  }
+  #user-dock-initials { width: 27px !important; height: 27px !important; }
+  #user-dock-name { font-size: 10px !important; }
+  #conn-status { font-size: 9px !important; }
+  #app-shell > aside:nth-of-type(1) > div:last-child button {
+    min-height: 30px !important; height: 30px !important; padding: 4px 9px !important;
+  }
+
+  /* Área de conversa */
+  #app-shell > section {
+    order: 3 !important; flex: 1 1 auto !important;
+    width: 100% !important; min-width: 0 !important; min-height: 0 !important;
+    height: auto !important; overflow: hidden !important;
+  }
+  #app-shell > aside:last-child { display: none !important; }
+  #app-shell > section > header {
+    flex: 0 0 58px !important; height: 58px !important; min-height: 58px !important;
+    padding: 7px 11px !important; gap: 8px !important;
+  }
+  #active-channel-name { font-size: 13px !important; }
+  #active-channel-topic { max-width: 46vw !important; overflow: hidden !important; text-overflow: ellipsis !important; white-space: nowrap !important; font-size: 9px !important; }
+  #app-shell > section > header button {
+    flex: 0 0 auto !important; max-width: 132px !important; min-height: 38px !important;
+    height: auto !important; padding: 8px 10px !important; white-space: normal !important;
+    line-height: 1.2 !important; font-size: 10px !important;
+  }
+  #messages-container {
+    flex: 1 1 auto !important; min-height: 0 !important;
+    padding: 12px 9px !important; overflow-x: hidden !important; overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+  }
+  #messages-container article { max-width: 100% !important; padding: 8px !important; overflow-wrap: anywhere !important; }
+  #messages-container article:hover { transform: none !important; }
+  #reply-banner { flex: 0 0 auto !important; margin: 0 8px !important; }
+  #app-shell > section > form {
+    flex: 0 0 auto !important; width: 100% !important;
+    display: flex !important; align-items: center !important; gap: 7px !important;
+    padding: 9px 9px max(10px, env(safe-area-inset-bottom)) !important;
+  }
+  #app-shell > section > form > label {
+    display: flex !important; flex: 0 0 40px !important; align-items: center !important;
+    justify-content: center !important; width: 40px !important; height: 42px !important;
+    min-height: 42px !important; padding: 0 !important; font-size: 0 !important;
+  }
+  #app-shell > section > form > label svg { width: 19px !important; height: 19px !important; }
+  #app-shell > section > form > input[type="text"] {
+    flex: 1 1 0 !important; width: 0 !important; min-width: 0 !important;
+    height: 44px !important; min-height: 44px !important; padding: 0 12px !important;
+    font-size: 14px !important; border-radius: 12px !important;
+  }
+  #app-shell > section > form > button[type="submit"] {
+    flex: 0 0 auto !important; min-width: 66px !important; min-height: 44px !important;
+    height: 44px !important; padding: 0 12px !important; font-size: 11px !important;
+    border-radius: 12px !important;
+  }
+
+  /* Chamada: botões grandes, quebrando linha sem sobreposição */
+  #webrtc-stage { flex: 0 1 auto !important; max-height: 48vh !important; min-height: 0 !important; padding: 9px !important; overflow-y: auto !important; }
+  #webrtc-stage > div:first-child { flex-wrap: wrap !important; gap: 8px !important; }
+  #webrtc-stage select { max-width: 45% !important; min-height: 38px !important; font-size: 12px !important; }
+  #video-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 7px !important; max-height: 28vh !important; }
+  #video-grid > div { min-width: 0 !important; }
+  #webrtc-stage > div:last-child { display: flex !important; flex-wrap: wrap !important; gap: 7px !important; }
+  #webrtc-stage > div:last-child button {
+    flex: 1 1 calc(50% - 7px) !important; min-width: 0 !important;
+    min-height: 43px !important; padding: 9px 8px !important; font-size: 11px !important;
+  }
+
+  /* Modais e configurações */
+  .modal-backdrop {
+    position: fixed !important; inset: 0 !important; z-index: 10000 !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    padding: 12px !important; overflow-y: auto !important;
+  }
+  .modal-backdrop.hidden { display: none !important; }
+  .modal-backdrop > form, .modal-backdrop > div, .join-server-dialog {
+    width: 100% !important; max-width: 520px !important;
+    max-height: calc(100dvh - 24px) !important; overflow-y: auto !important;
+    border-radius: 18px !important;
+  }
+  .join-server-hero { padding: 20px 18px !important; }
+  .join-server-fields { padding: 18px !important; }
+  .join-server-actions { padding: 14px 18px 18px !important; flex-wrap: wrap !important; }
+  .join-server-submit { min-width: 0 !important; flex: 1 1 auto !important; }
+  .settings-panel { width: 100% !important; max-width: 100% !important; max-height: calc(100dvh - 20px) !important; overflow-y: auto !important; }
+  .settings-layout { display: flex !important; flex-direction: column !important; min-width: 0 !important; }
+  .settings-nav {
+    display: flex !important; flex-direction: row !important; gap: 6px !important;
+    width: 100% !important; max-width: 100% !important; overflow-x: auto !important;
+    padding: 8px !important; border-right: 0 !important;
+    border-bottom: 1px solid rgba(255,255,255,.1) !important;
+  }
+  .settings-tab { flex: 0 0 auto !important; min-height: 40px !important; padding: 9px 12px !important; }
+  .settings-content { min-width: 0 !important; min-height: 0 !important; padding: 14px !important; }
+  .settings-option { align-items: flex-start !important; gap: 10px !important; padding: 12px !important; }
+  .settings-primary, .settings-secondary { min-height: 42px !important; padding: 10px 13px !important; }
+  #toast-container { top: max(8px,env(safe-area-inset-top)) !important; right: 8px !important; left: 8px !important; }
+  #toast-container > div { width: 100% !important; max-width: none !important; }
+}
+
+@media (max-width: 380px) {
+  #app-shell > nav { padding-left: 7px !important; padding-right: 7px !important; gap: 7px !important; }
+  #app-shell > nav .hc-side-logo { width: 34px !important; height: 34px !important; flex-basis: 34px !important; }
+  #server-list { gap: 5px !important; }
+  #server-list button, #app-shell > nav > button { width: 34px !important; min-width: 34px !important; flex-basis: 34px !important; height: 34px !important; min-height: 34px !important; }
+  #app-shell > section > header { padding-left: 8px !important; padding-right: 8px !important; }
+  #app-shell > section > header button { max-width: 112px !important; font-size: 9px !important; }
+  #app-shell > section > form { gap: 5px !important; padding-left: 6px !important; padding-right: 6px !important; }
+  #app-shell > section > form > label { flex-basis: 36px !important; width: 36px !important; }
+  #app-shell > section > form > button[type="submit"] { min-width: 58px !important; padding: 0 8px !important; }
+}
