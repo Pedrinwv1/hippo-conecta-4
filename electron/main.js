@@ -1,24 +1,24 @@
 const { app, BrowserWindow, shell, session } = require('electron');
-const path = require('node:path');
-const fs = require('node:fs');
-const crypto = require('node:crypto');
 
-let server;
+const APP_URL = 'https://hippo-conecta.onrender.com';
+const APP_ORIGIN = new URL(APP_URL).origin;
 let win;
-const port = 0;
 
 function configureMediaPermissions() {
   const allowedPermissions = new Set(['media', 'display-capture', 'notifications']);
+  const isTrustedApp = (origin) => {
+    try { return new URL(origin).origin === APP_ORIGIN; } catch { return false; }
+  };
+
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
     let requestOrigin = '';
     try { requestOrigin = new URL(webContents.getURL()).origin; } catch {}
-    const isLocalApp = /^http:\/\/127\.0\.0\.1:\d+$/.test(requestOrigin);
-    callback(isLocalApp && allowedPermissions.has(permission));
-  });
-  session.defaultSession.setPermissionCheckHandler((webContents, permission, requestingOrigin) => {
-    return /^http:\/\/127\.0\.0\.1:\d+$/.test(requestingOrigin || '') && allowedPermissions.has(permission);
+    callback(isTrustedApp(requestOrigin) && allowedPermissions.has(permission));
   });
 
+  session.defaultSession.setPermissionCheckHandler((webContents, permission, requestingOrigin) => {
+    return isTrustedApp(requestingOrigin || webContents?.getURL()) && allowedPermissions.has(permission);
+  });
 }
 
 function createWindow() {
@@ -27,35 +27,37 @@ function createWindow() {
     height: 900,
     minWidth: 900,
     minHeight: 620,
-    backgroundColor: '#06070a',
-    icon: path.join(__dirname, '../public/icons/favicon.ico'),
+    show: false,
+    title: 'HIPPO CONECTA',
+    backgroundColor: '#080808',
+    icon: __dirname + '/../public/icons/favicon.ico',
+    autoHideMenuBar: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: __dirname + '/preload.js',
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
       webSecurity: true
     }
   });
+
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https://')) shell.openExternal(url);
+    try {
+      const target = new URL(url);
+      if (target.protocol === 'https:' && target.origin !== APP_ORIGIN) shell.openExternal(target.href);
+    } catch {}
     return { action: 'deny' };
   });
-  win.loadURL(`http://127.0.0.1:${server.address().port}`);
+
+  win.once('ready-to-show', () => win.show());
+  win.loadURL(APP_URL);
   win.on('closed', () => { win = null; });
 }
 
 app.whenReady().then(() => {
-  const dataDir = app.getPath('userData');
-  fs.mkdirSync(dataDir, { recursive: true });
-  process.env.DB_PATH ||= path.join(dataDir, 'data.json');
-  process.env.UPLOAD_DIR ||= path.join(dataDir, 'uploads');
-  process.env.JWT_SECRET ||= crypto.randomBytes(48).toString('hex');
-  process.env.NODE_ENV = app.isPackaged ? 'production' : 'development';
-  process.env.HIPPO_DESKTOP = '1';
+  app.setAppUserModelId('br.com.hippoconecta.desktop');
   configureMediaPermissions();
-  ({ server } = require('../server'));
-  server.listen(port, '127.0.0.1', createWindow);
+  createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -63,7 +65,4 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
-});
-app.on('before-quit', () => {
-  if (server?.listening) server.close();
 });
