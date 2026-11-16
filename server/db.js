@@ -43,9 +43,20 @@ async function initDB() {
     let Pool;
     try { ({ Pool } = require('pg')); }
     catch { throw new Error('DATABASE_URL foi definido, mas o pacote pg não está instalado. Execute npm install.'); }
+    // Remove SSL query parameters from the URL so node-postgres does not override
+    // the explicit TLS options below. Prefer the CA certificate supplied by Supabase.
+    const databaseUrl = new URL(process.env.DATABASE_URL);
+    for (const key of ['sslmode', 'sslrootcert', 'sslcert', 'sslkey']) databaseUrl.searchParams.delete(key);
+    const sslEnabled = process.env.PGSSL !== 'false';
+    const ssl = sslEnabled
+      ? {
+          rejectUnauthorized: true,
+          ...(process.env.PGSSL_CA ? { ca: process.env.PGSSL_CA.replace(/\\n/g, '\n') } : {})
+        }
+      : false;
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
-      ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: process.env.PGSSL_REJECT_UNAUTHORIZED !== 'false' } : undefined,
+      connectionString: databaseUrl.toString(),
+      ssl,
       max: Number(process.env.PG_POOL_MAX || 10),
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000
