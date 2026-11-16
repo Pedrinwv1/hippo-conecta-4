@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: hippo-conecta
+    runtime: node
+    region: ohio
+    plan: free
+    buildCommand: npm install && npm run build:css
+    startCommand: node server/index.js
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 20.19.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: REQUIRE_POSTGRES
+        value: "true"
+      - key: PGSSL
+        value: "true"
+      - key: REQUIRE_REMOTE_STORAGE
+        value: "true"
+      - key: R2_ENDPOINT
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false
+      - key: R2_PUBLIC_URL
+        sync: false
+      - key: STUN_URL
+        value: stun:stun.l.google.com:19302
+      - key: TURN_URLS
+        value: ""
+      - key: TURN_SHARED_SECRET
+        sync: false
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false

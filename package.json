@@ -1,0 +1,83 @@
+{
+  "name": "hippo-conecta",
+  "version": "4.0.0-rc.2",
+  "private": true,
+  "description": "HIPPO CONECTA 4.0 — comunicação multiplataforma",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "npm run build:css && node server/index.js",
+    "dev": "npm run build:css && node --watch server/index.js",
+    "check": "node --check server/index.js && node --check server/db.js && node --check electron/main.js && node --check electron/preload.js && node --check scripts/migrate-json-to-postgres.js && node --check public/js/api.js && node --check public/js/app.js && node --check public/js/auth.js && node --check public/js/chat.js && node --check public/js/webrtc.js && node --check public/js/settings.js && node --check server/object-storage.js",
+    "build": "npm run build:css",
+    "build:css": "tailwindcss -i ./public/css/tailwind.input.css -o ./public/css/tailwind.css --minify",
+    "test": "node --test",
+    "desktop:dev": "npm run build:css && electron .",
+    "desktop:dist": "npm run build:css && electron-builder --win nsis",
+    "android:sync": "npm run build:css && cap sync android",
+    "android:open": "cap open android",
+    "android:build:debug": "npm run android:sync && cd android && gradlew.bat assembleDebug",
+    "android:build:release": "npm run android:sync && cd android && gradlew.bat assembleRelease",
+    "db:migrate:postgres": "node scripts/migrate-json-to-postgres.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "socket.io": "^4.8.1",
+    "uuid": "^9.0.1",
+    "tailwindcss": "3.4.17",
+    "@capacitor/core": "^6.2.1",
+    "pg": "^8.13.1",
+    "livekit-server-sdk": "^2.9.6",
+    "@aws-sdk/client-s3": "^3.922.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.1",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "@capacitor/android": "^6.2.1"
+  },
+  "build": {
+    "appId": "br.com.hippoconecta.desktop",
+    "productName": "HIPPO CONECTA",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "electron/**/*",
+      "server/**/*",
+      "public/**/*",
+      "package.json",
+      "node_modules/**/*",
+      "!server/data.json",
+      "!public/uploads/**/*"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "public/icons/favicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "HIPPO CONECTA",
+      "uninstallDisplayName": "HIPPO CONECTA"
+    },
+    "artifactName": "HIPPO_CONECTA_4.0_Windows_${version}.${ext}"
+  }
+}

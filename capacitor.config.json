@@ -1,0 +1,8 @@
+{
+  "appId": "br.com.hippoconecta.app",
+  "appName": "HIPPO CONECTA",
+  "webDir": "public",
+  "bundledWebRuntime": false,
+  "server": { "androidScheme": "https", "cleartext": false },
+  "android": { "allowMixedContent": false, "webContentsDebuggingEnabled": false }
+}
