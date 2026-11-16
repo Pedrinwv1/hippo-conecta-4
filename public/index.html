@@ -17,7 +17,7 @@
   <link rel="manifest" href="/manifest.json" />
   <link rel="stylesheet" href="/css/tailwind.css" />
   <script>window.HIPPO_API_BASE = document.querySelector('meta[name="hippo-api-base"]')?.content?.trim() || window.location.origin; document.write(`<script src="${window.HIPPO_API_BASE}/socket.io/socket.io.js"><\/script>`);</script>
-  <link rel="stylesheet" href="/css/styles.css?v=5.1.0" />
+  <link rel="stylesheet" href="/css/styles.css?v=5.2.0" />
 </head>
 <body class="bg-[#06070a] text-slate-100 antialiased overflow-hidden select-none">
   <div id="splash" class="hc-splash" aria-hidden="true"><img src="/img/logo-full-512.png" alt="" /><div class="hc-splash-bar"><span></span></div></div>
@@ -25,8 +25,8 @@
 
   <!-- AUTH SCREEN -->
   <section id="auth-screen" class="min-h-screen flex items-center justify-center p-4 relative">
-    <div class="w-full max-w-md glass-obsidian rounded-3xl p-8 shadow-2xl bg-[#0b0d13]/90 border border-purple-500/20">
-      <div class="flex flex-col items-center text-center mb-6">
+    <div class="auth-card w-full max-w-md glass-obsidian rounded-3xl p-8 shadow-2xl bg-[#0b0d13]/90 border border-purple-500/20">
+      <div class="auth-brand flex flex-col items-center text-center mb-6">\n        <span class="auth-kicker">SEU UNIVERSO. SUA CONEXÃO.</span>
         <img src="/img/logo-full-512.png" alt="Hippo Conecta" class="hc-login-logo" width="240" height="240" />
         <h1 class="sr-only">HIPPO CONECTA</h1>
         <p class="text-xs text-slate-400 mt-1">Comunicação em tempo real, servidores e WebRTC</p>
@@ -191,13 +191,23 @@
     </form>
   </div>
 
-  <div id="modal-join-server" class="modal-backdrop hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-    <form onsubmit="App.joinServer(event)" class="bg-[#12151f] border border-purple-500/30 rounded-2xl p-6 w-full max-w-sm space-y-4">
-      <h3 class="text-base font-bold text-white">Entrar com Convite</h3>
-      <input type="text" id="invite-code-input" required placeholder="Código (ex: HIPO-PRO)" class="w-full px-3 py-2 bg-[#06070a] border border-white/10 rounded-xl text-sm text-white uppercase" />
-      <div class="flex justify-end gap-2">
-        <button type="button" onclick="UI.closeModals()" class="px-3 py-1.5 text-xs text-slate-400">Cancelar</button>
-        <button type="submit" class="px-4 py-1.5 rounded-xl bg-purple-600 text-xs font-semibold text-white">Entrar</button>
+  <div id="modal-join-server" class="modal-backdrop join-server-backdrop hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <form onsubmit="App.joinServer(event)" class="join-server-dialog w-full max-w-md">
+      <div class="join-server-hero">
+        <button type="button" onclick="UI.closeModals()" class="join-server-close" aria-label="Fechar">✕</button>
+        <div class="join-server-mark" aria-hidden="true">↗</div>
+        <p class="join-server-eyebrow">HIPPO CONECTA / CONVITES</p>
+        <h3>Entre para a comunidade.</h3>
+        <p>Insira a sigla ou o código de convite que alguém compartilhou com você.</p>
+      </div>
+      <div class="join-server-fields">
+        <label for="invite-code-input">SIGLA OU CÓDIGO DO CONVITE</label>
+        <input type="text" id="invite-code-input" required maxlength="32" autocomplete="off" spellcheck="false" placeholder="EX.: HIPO-PRO" />
+        <div class="join-server-hint"><span class="join-server-hint-dot"></span> Confira o código antes de continuar.</div>
+      </div>
+      <div class="join-server-actions">
+        <button type="button" onclick="UI.closeModals()" class="join-server-cancel">Cancelar</button>
+        <button type="submit" class="join-server-submit"><span>Entrar no servidor</span><span aria-hidden="true">→</span></button>
       </div>
     </form>
   </div>
