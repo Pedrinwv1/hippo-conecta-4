@@ -60,8 +60,14 @@
       <img src="/icons/icon-96.png" alt="Hippo Conecta" title="Hippo Conecta" class="hc-side-logo" width="44" height="44" />
       <div class="w-8 h-[1px] bg-white/10"></div>
       <div id="server-list" class="flex-1 flex flex-col items-center gap-2.5 overflow-y-auto w-full"></div>
-      <button onclick="UI.openModal('modal-create-server')" title="Criar Servidor" class="w-11 h-11 rounded-2xl bg-[#12151f] hover:bg-purple-600 text-purple-400 hover:text-white flex items-center justify-center transition">+</button>
-      <button onclick="UI.openModal('modal-join-server')" title="Entrar por Convite" class="w-11 h-11 rounded-2xl bg-[#12151f] hover:bg-emerald-600 text-emerald-400 hover:text-white flex items-center justify-center text-xs font-bold transition">IN</button>
+      <button id="btn-create-server" onclick="UI.openModal('modal-create-server')" title="Criar um novo servidor" aria-label="Criar servidor">
+        <span class="create-server-plus" aria-hidden="true">+</span>
+        <span class="create-server-label">CRIAR</span>
+      </button>
+      <button id="btn-join-server" onclick="UI.openModal('modal-join-server')" title="Entrar em um servidor por convite" aria-label="Entrar por convite">
+        <span aria-hidden="true">↗</span>
+        <small>ENTRAR</small>
+      </button>
     </nav>
 
     <aside class="w-64 bg-[#0b0d13] border-r border-white/5 flex flex-col shrink-0">
@@ -155,14 +161,32 @@
   </main>
 
   <!-- MODALS -->
-  <div id="modal-create-server" class="modal-backdrop hidden fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-    <form onsubmit="App.createServer(event)" class="bg-[#12151f] border border-purple-500/30 rounded-2xl p-6 w-full max-w-sm space-y-4">
-      <h3 class="text-base font-bold text-white">Criar Servidor</h3>
-      <input type="text" id="new-server-name" required placeholder="Nome do Servidor" class="w-full px-3 py-2 bg-[#06070a] border border-white/10 rounded-xl text-sm text-white" />
-      <input type="text" id="new-server-icon" maxlength="2" required placeholder="Sigla (2 letras)" class="w-full px-3 py-2 bg-[#06070a] border border-white/10 rounded-xl text-sm text-white uppercase" />
-      <div class="flex justify-end gap-2">
-        <button type="button" onclick="UI.closeModals()" class="px-3 py-1.5 text-xs text-slate-400">Cancelar</button>
-        <button type="submit" class="px-4 py-1.5 rounded-xl bg-purple-600 text-xs font-semibold text-white">Criar</button>
+  <div id="modal-create-server" class="modal-backdrop create-server-backdrop hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <form onsubmit="App.createServer(event)" class="create-server-dialog w-full max-w-md">
+      <div class="create-server-hero">
+        <div class="create-server-hero-icon" aria-hidden="true">
+          <svg viewBox="0 0 48 48" width="30" height="30" fill="none"><path d="M24 8v32M8 24h32" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>
+        </div>
+        <button type="button" onclick="UI.closeModals()" class="create-server-close" aria-label="Fechar">✕</button>
+        <p class="create-server-eyebrow">HIPPO CONECTA / COMUNIDADE</p>
+        <h3>Crie seu espaço.</h3>
+        <p>Reúna seus amigos, organize conversas e comece sua comunidade.</p>
+      </div>
+      <div class="create-server-fields">
+        <label for="new-server-name">NOME DO SERVIDOR</label>
+        <input type="text" id="new-server-name" required maxlength="40" placeholder="Ex.: Minha comunidade" />
+        <div class="create-server-icon-row">
+          <div class="create-server-preview" id="new-server-preview">HC</div>
+          <div class="create-server-icon-field">
+            <label for="new-server-icon">SIGLA DO SERVIDOR</label>
+            <input type="text" id="new-server-icon" maxlength="2" required placeholder="HC" class="uppercase" />
+            <small>Use até 2 letras para identificar seu servidor.</small>
+          </div>
+        </div>
+      </div>
+      <div class="create-server-actions">
+        <button type="button" onclick="UI.closeModals()" class="create-server-cancel">Cancelar</button>
+        <button type="submit" class="create-server-submit"><span>Criar servidor</span><span aria-hidden="true">→</span></button>
       </div>
     </form>
   </div>
