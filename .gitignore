@@ -1,5 +1,20 @@
 node_modules/
+
+# Environment files (keep only the safe template)
 .env
+.env.*
+!.env.example
+
+# Private keys and local credentials
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+credentials/
+service-account*.json
+
+# Runtime/local data
 server/data.json
 public/uploads/*
 !public/uploads/.gitkeep
