@@ -183,3 +183,22 @@ body{background-image:radial-gradient(ellipse at 48% -18%,rgba(113,63,214,.22),t
   #app-shell>section>form>label{display:none}
   #app-shell>section>form>button[type=submit]{padding:0 10px}
 }
+
+
+/* HIPPO CONECTA 4.1.1 — reforço visual e cache bust */
+html body { background-color:#080811 !important; }
+#auth-screen { background:radial-gradient(ellipse at 50% 45%,rgba(123,76,220,.22),transparent 55%),linear-gradient(135deg,#080811,#111022) !important; }
+#auth-screen > div { width:min(100%,460px) !important; max-width:460px !important; padding:38px !important; border:1px solid rgba(174,139,255,.38) !important; border-radius:30px !important; background:linear-gradient(145deg,#1a1730 0%,#0c0d18 72%) !important; box-shadow:0 35px 110px rgba(0,0,0,.72),0 0 80px rgba(123,76,220,.2) !important; }
+#app-shell { background:#090912 !important; }
+#app-shell > nav { flex:0 0 82px !important; width:82px !important; background:linear-gradient(180deg,#171329,#0b0b14) !important; border-right:1px solid rgba(167,139,250,.2) !important; }
+#app-shell > aside:nth-of-type(1) { flex:0 0 280px !important; width:280px !important; background:linear-gradient(180deg,#171525,#10101a) !important; border-right:1px solid rgba(167,139,250,.18) !important; }
+#app-shell > section { min-width:0 !important; background:linear-gradient(145deg,#11111e,#0b0c14) !important; }
+#app-shell > section > header { flex:0 0 76px !important; height:76px !important; background:rgba(24,21,42,.94) !important; border-bottom:1px solid rgba(167,139,250,.2) !important; }
+#app-shell > aside:last-child { flex:0 0 235px !important; width:235px !important; background:linear-gradient(180deg,#171525,#10101a) !important; border-left:1px solid rgba(167,139,250,.18) !important; }
+#app-shell button { border-radius:12px; }
+#app-shell > section > form { flex:0 0 auto !important; padding:16px 22px 22px !important; background:linear-gradient(180deg,transparent,rgba(5,5,12,.9)) !important; }
+#app-shell > section > form > input[type="text"] { min-height:50px !important; background:#1a1929 !important; border:1px solid rgba(167,139,250,.2) !important; border-radius:15px !important; }
+#app-shell > section > form > button[type="submit"], #app-shell > section > header button { background:linear-gradient(110deg,#7040d7,#a06af5) !important; box-shadow:0 8px 24px rgba(112,64,215,.3) !important; }
+#messages-container { background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.055),transparent 60%) !important; }
+@media(max-width:900px){#app-shell > aside:last-child{display:none !important;}#app-shell > aside:nth-of-type(1){flex-basis:230px !important;width:230px !important;}}
+@media(max-width:640px){#app-shell > nav{flex-basis:58px !important;width:58px !important;}#app-shell > aside:nth-of-type(1){flex-basis:155px !important;width:155px !important;min-width:155px !important;}#auth-screen > div{padding:26px 22px !important;}}
