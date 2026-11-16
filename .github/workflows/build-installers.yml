@@ -72,7 +72,7 @@ jobs:
           for permission in permissions:
               tag = f'<uses-permission android:name="{permission}" />'
               if tag not in s:
-                  s = s.replace("<application", f"    {tag}\\n    <application", 1)
+                  s = s.replace("<application", f"    {tag}\n    <application", 1)
           p.write_text(s)
           PY
           ICON="public/icons/icon-512.png"
