@@ -342,7 +342,7 @@ io.on('connection', socket => {
       const db = readDB();
       if (!channelAccess(db, socket.user.id, channelId)) return socketAck(ack, { ok: false, error: 'Acesso negado ao canal.' });
       const attachment = payload.attachment && typeof payload.attachment === 'object' ? payload.attachment : null;
-      if (attachment && (!/^\/uploads\/[a-f0-9-]+(?:\.[a-z0-9]{1,10})?$/i.test(String(attachment.url || '')) || typeof attachment.name !== 'string')) return socketAck(ack, { ok: false, error: 'Anexo inválido.' });
+      if (attachment && (!objectStorage.isPublicUrl(String(attachment.url || '')) || typeof attachment.name !== 'string')) return socketAck(ack, { ok: false, error: 'Anexo inválido.' });
       if (!text && !attachment) return socketAck(ack, { ok: false, error: 'Mensagem vazia.' });
       const message = { id: uuidv4(), authorId: socket.user.id, authorName: socket.user.name, authorAvatarUrl: socket.user.avatarUrl || null, text, attachment, replyTo: payload.replyTo || null, reactions: {}, timestamp: new Date().toISOString() };
       await updateDB(data => {
