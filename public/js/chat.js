@@ -31,7 +31,7 @@ const Chat = {
       const authorAvatar = m.authorAvatarUrl || (mine ? App.state.user.avatarUrl : null);
       const time = new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
       const reply = m.replyTo ? msgs.find(item => item.id === m.replyTo) : null;
-      const safeAttachmentUrl = m.attachment && /^\/uploads\/[a-f0-9-]+(?:\.[a-z0-9]{1,10})?$/i.test(m.attachment.url || '') ? m.attachment.url : null;
+      const safeAttachmentUrl = m.attachment && (/^\/uploads\/(?:avatars|files)\/[a-f0-9-]+(?:\.[a-z0-9]{1,10})?$/i.test(m.attachment.url || '') || /^https:\/\/fnxddxknngfuqvzawlni\.supabase\.co\/storage\/v1\/object\/public\/hippo-media\/files\/[a-f0-9-]+(?:\.[a-z0-9]{1,10})?$/i.test(m.attachment.url || '')) ? m.attachment.url : null;
       const attachment = m.attachment && safeAttachmentUrl ? `<a href="${this.escapeHTML(safeAttachmentUrl)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 mt-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-xs text-purple-300 hover:bg-purple-500/10">📎 ${this.escapeHTML(m.attachment.name)} <span class="text-slate-500">(${Math.ceil((m.attachment.size || 0) / 1024)} KB)</span></a>` : '';
       const reactions = Object.entries(m.reactions || {}).map(([emoji, users]) => `<button data-action="react" data-message-id="${this.escapeHTML(m.id)}" data-emoji="${this.escapeHTML(emoji)}" class="px-2 py-1 rounded-lg border ${users.includes(App.state.user.id) ? 'border-purple-400 bg-purple-500/20' : 'border-white/10 bg-white/5'} text-xs">${this.escapeHTML(emoji)} ${users.length}</button>`).join('');
       return `<article class="group flex items-start gap-3 p-2 rounded-xl hover:bg-white/[0.025]" data-message-id="${this.escapeHTML(m.id)}">
