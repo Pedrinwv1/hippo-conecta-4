@@ -90,3 +90,96 @@ body[data-theme="compact"] #channel-list-container button { min-height: 27px; pa
 .hc-splash-bar{width:140px;height:3px;border-radius:3px;background:rgba(139,92,246,.2);overflow:hidden}
 .hc-splash-bar span{display:block;height:100%;width:40%;background:#a855f7;box-shadow:0 0 12px #a855f7;animation:hc-load 1s ease-in-out infinite}
 @keyframes hc-load{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+
+
+
+/* ===== HIPPO CONECTA 4.1 — interface premium ===== */
+:root{
+  --hc-panel:#10111b;
+  --hc-panel-soft:#151626;
+  --hc-line:rgba(167,139,250,.13);
+  --hc-muted:#9694aa;
+  --hc-accent:#9365f5;
+  --hc-accent-bright:#ad8bff;
+}
+html,body{height:100%;min-height:100%;background:#080810}
+body{background-image:radial-gradient(ellipse at 48% -18%,rgba(113,63,214,.22),transparent 48%),radial-gradient(ellipse at 100% 100%,rgba(58,39,118,.13),transparent 36%)}
+#auth-screen{padding:28px;background:radial-gradient(ellipse at 50% 42%,rgba(111,67,205,.13),transparent 48%)}
+#auth-screen>div{max-width:430px;padding:34px 36px 36px;border:1px solid rgba(177,145,255,.2);border-radius:28px;background:linear-gradient(145deg,rgba(24,22,39,.96),rgba(10,11,19,.97));box-shadow:0 35px 110px rgba(0,0,0,.58),0 0 70px rgba(124,58,237,.12)}
+.hc-login-logo{width:190px;height:190px;margin:-10px 0 0}
+#auth-screen form input{height:48px;padding-left:15px;border-radius:13px;background:rgba(5,6,13,.78);border-color:rgba(255,255,255,.09)}
+#auth-screen form input:focus{border-color:rgba(167,139,250,.75);box-shadow:0 0 0 4px rgba(139,92,246,.12)}
+#auth-screen form button[type=submit]{height:48px;border-radius:13px;background:linear-gradient(105deg,#7040d7,#9562f4);box-shadow:0 9px 25px rgba(124,58,237,.22);letter-spacing:.01em}
+#auth-screen form button[type=submit]:hover{filter:brightness(1.12);box-shadow:0 12px 30px rgba(124,58,237,.34)}
+#auth-screen>div>p{letter-spacing:.02em}
+#app-shell{background:#090a12}
+#app-shell>nav{width:78px;padding:17px 0;background:linear-gradient(180deg,#11101c,#0a0b12);border-color:var(--hc-line);gap:15px}
+#app-shell>nav .hc-side-logo{width:48px;height:48px;border-radius:16px}
+#server-list{gap:12px;padding:4px 0}
+#server-list button{width:46px;height:46px;border-radius:16px!important;border:1px solid rgba(255,255,255,.06);background:linear-gradient(145deg,#1b1a2b,#11121c);font-weight:700;transition:all .2s ease}
+#server-list button:hover,#server-list button.active{border-color:rgba(167,139,250,.55);background:linear-gradient(145deg,#7545d5,#4e319a);box-shadow:0 8px 24px rgba(112,65,205,.28);transform:translateY(-2px)}
+#app-shell>nav>button{width:46px;height:46px;border-radius:16px}
+#app-shell>aside:not(.hidden){background:linear-gradient(180deg,#12121e,#0e0f18);border-color:var(--hc-line)}
+#app-shell>aside:nth-of-type(1){width:270px}
+#sidebar-title{font-size:14px;letter-spacing:-.02em}
+#sidebar-subtitle{color:#ad8bff}
+#channel-list-container{padding:17px 13px}
+#channel-list-container button{border-radius:10px;transition:background .18s,color .18s}
+#channel-list-container button:hover{background:rgba(148,102,245,.12);color:#fff}
+#app-shell>section{background:linear-gradient(145deg,#10111a 0%,#0c0d15 58%,#10101b 100%)}
+#app-shell>section>header{height:72px;padding:0 25px;border-color:var(--hc-line);background:rgba(17,17,28,.82)}
+#active-channel-name{font-size:15px;letter-spacing:-.015em}
+#app-shell>section>header button{padding:10px 16px;border-radius:12px;background:linear-gradient(110deg,#7545d5,#9160eb);box-shadow:0 6px 18px rgba(124,58,237,.2)}
+#messages-container{padding:24px clamp(18px,3vw,42px);scroll-behavior:smooth}
+#messages-container article{padding:10px 12px;border-radius:14px}
+#messages-container article:hover{background:rgba(255,255,255,.025)}
+#app-shell>section>form{padding:14px 22px 20px;background:linear-gradient(180deg,transparent,rgba(7,8,14,.72))}
+#app-shell>section>form>input[type=text]{height:48px;border-radius:14px;background:#171725;border-color:rgba(255,255,255,.08);padding-left:16px}
+#app-shell>section>form>input[type=text]:focus{border-color:rgba(167,139,250,.65);box-shadow:0 0 0 3px rgba(139,92,246,.1)}
+#app-shell>section>form>button[type=submit]{height:46px;padding:0 22px;border-radius:13px;background:linear-gradient(110deg,#7545d5,#9563f2)}
+#app-shell>aside:last-child{width:230px;background:linear-gradient(180deg,#12121e,#0d0e17);border-color:var(--hc-line)}
+#app-shell>aside:last-child h3{font-size:10px;letter-spacing:.16em;color:#a49abf}
+#members-list>div{padding:8px;border-radius:12px;transition:background .18s}
+#members-list>div:hover{background:rgba(255,255,255,.035)}
+#voice-status-bar{border-radius:14px}
+#webrtc-stage{background:linear-gradient(145deg,#0a0a13,#121020);border-color:var(--hc-line)}
+#video-grid>div{border-radius:18px;border-color:rgba(167,139,250,.22);box-shadow:0 12px 35px rgba(0,0,0,.22)}
+#video-grid video{border-radius:18px}
+#toast-container>div{border:1px solid rgba(167,139,250,.18);border-radius:13px;box-shadow:0 15px 45px rgba(0,0,0,.35);backdrop-filter:blur(16px)}
+.modal-backdrop{background:rgba(3,3,9,.78)}
+.modal-backdrop>form{border-radius:20px;border-color:rgba(167,139,250,.2);background:linear-gradient(145deg,#191827,#10111a)}
+.settings-panel{border-color:rgba(167,139,250,.2);background:linear-gradient(145deg,#12121e,#0b0c14)}
+.settings-tab{padding:12px 14px;border-radius:12px}
+.settings-primary{background:linear-gradient(110deg,#7545d5,#9563f2)}
+/* Tablet and phone layouts */
+@media(max-width:1100px){
+  #app-shell>aside:last-child{display:none}
+  #app-shell>aside:nth-of-type(1){width:235px}
+}
+@media(max-width:700px){
+  #app-shell>nav{width:58px;padding:10px 0;gap:9px}
+  #app-shell>nav .hc-side-logo{width:39px;height:39px;border-radius:13px}
+  #server-list button,#app-shell>nav>button{width:38px;height:38px;border-radius:13px!important}
+  #app-shell>aside:nth-of-type(1){width:190px;min-width:190px}
+  #app-shell>aside:nth-of-type(1)>div:first-child{padding-left:11px;padding-right:11px}
+  #channel-list-container{padding:10px 8px}
+  #app-shell>section>header{height:62px;padding:0 13px}
+  #app-shell>section>header button{font-size:10px;padding:8px 10px}
+  #messages-container{padding:13px 10px}
+  #app-shell>section>form{padding:10px;gap:6px}
+  #app-shell>section>form>label{font-size:0;padding:12px}
+  #app-shell>section>form>label svg{width:18px;height:18px}
+  #app-shell>section>form>input[type=text]{min-width:0;font-size:12px;padding:0 10px}
+  #app-shell>section>form>button[type=submit]{padding:0 12px;font-size:10px}
+  #auth-screen{padding:16px}
+  #auth-screen>div{padding:25px 22px 27px}
+  .hc-login-logo{width:160px;height:160px}
+}
+@media(max-width:470px){
+  #app-shell>aside:nth-of-type(1){width:155px;min-width:155px}
+  #sidebar-title{font-size:12px}
+  #sidebar-subtitle{font-size:9px}
+  #app-shell>section>header button{max-width:112px;line-height:1.25}
+  #app-shell>section>form>label{display:none}
+  #app-shell>section>form>button[type=submit]{padding:0 10px}
+}
