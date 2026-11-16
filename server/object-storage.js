@@ -2,7 +2,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 
 const uploadDir = path.resolve(process.env.UPLOAD_DIR || path.join(__dirname, '../public/uploads'));
-const supabaseUrl = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
+const supabaseUrl = (process.env.SUPABASE_URL || 'https://fnxddxknngfuqvzawlni.supabase.co').replace(/\/+$/, '');
 const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabaseBucket = process.env.SUPABASE_STORAGE_BUCKET || 'hippo-media';
 const supabaseConfigured = Boolean(supabaseUrl && supabaseKey);
