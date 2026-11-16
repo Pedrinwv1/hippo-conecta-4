@@ -45,7 +45,7 @@ async function initDB() {
     catch { throw new Error('DATABASE_URL foi definido, mas o pacote pg não está instalado. Execute npm install.'); }
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: true } : undefined,
+      ssl: process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : undefined,
       max: Number(process.env.PG_POOL_MAX || 10),
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000
