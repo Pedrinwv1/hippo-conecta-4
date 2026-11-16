@@ -303,8 +303,9 @@ app.post('/api/uploads', authMiddleware, (req, res, next) => upload.single('file
     }
     const ext = path.extname(req.file.originalname).toLowerCase().replace(/[^.a-z0-9]/g, '').slice(0, 10);
     const key = `files/${uuidv4()}${ext}`;
-    const fileUrl = await objectStorage.put(req.file.buffer, key, req.file.mimetype);
-    res.status(201).json({ attachment: { name: path.basename(req.file.originalname).slice(0, 150), url: fileUrl, size: req.file.size, mimeType: req.file.mimetype } });
+    const contentType = ext === '.zip' ? 'application/zip' : ext === '.txt' ? 'text/plain' : req.file.mimetype;
+    const fileUrl = await objectStorage.put(req.file.buffer, key, contentType);
+    res.status(201).json({ attachment: { name: path.basename(req.file.originalname).slice(0, 150), url: fileUrl, size: req.file.size, mimeType: contentType } });
   } catch (e) { next(e); }
 }));
 
