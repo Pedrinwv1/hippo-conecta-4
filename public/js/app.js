@@ -111,7 +111,7 @@ const App = {
   async joinServer(e) {
     e.preventDefault();
     try {
-      const code = document.getElementById('invite-code-input').value;
+      const code = document.getElementById('invite-code-input').value.trim().toUpperCase();
       const srv = await API.post('/api/servers/join', { code });
       if (!this.state.servers.some(s => s.id === srv.id)) this.state.servers.push(srv);
       API.socket?.emit('server:subscribe', { serverId: srv.id });
