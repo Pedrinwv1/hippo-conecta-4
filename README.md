@@ -57,3 +57,4 @@ Note: push delivery while the Android app is fully closed still requires Firebas
 
 Build de distribuição 5.4.0 validado no GitHub Actions; a publicação utiliza os artefatos APK e EXE já compilados e verificados.
 Publicação 5.4.0: artefatos previamente validados com permissão de leitura do GitHub Actions habilitada para o job de release.
+Release 5.4.0: publicação baseada nos instaladores já compilados e validados.
