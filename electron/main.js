@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell, session } = require('electron');
+const { app, BrowserWindow, shell, session, desktopCapturer } = require('electron');
 
 const APP_URL = 'https://hippo-conecta.onrender.com';
 const APP_ORIGIN = new URL(APP_URL).origin;
@@ -18,6 +18,22 @@ function configureMediaPermissions() {
 
   session.defaultSession.setPermissionCheckHandler((webContents, permission, requestingOrigin) => {
     return isTrustedApp(requestingOrigin || webContents?.getURL()) && allowedPermissions.has(permission);
+  });
+
+  // Electron needs an explicit media-source handler for getDisplayMedia().
+  // Only the trusted HIPPO origin can request screen capture.
+  session.defaultSession.setDisplayMediaRequestHandler(async (request, callback) => {
+    let requestOrigin = '';
+    try { requestOrigin = new URL(request.securityOrigin || request.frame?.url || '').origin; } catch {}
+    if (!isTrustedApp(requestOrigin)) return callback({});
+    try {
+      const sources = await desktopCapturer.getSources({ types: ['screen', 'window'], thumbnailSize: { width: 320, height: 180 } });
+      if (!sources.length) return callback({});
+      callback({ video: sources[0], audio: request.audioRequested ? 'loopback' : undefined });
+    } catch (error) {
+      console.error('[media] screen capture request failed:', error);
+      callback({});
+    }
   });
 }
 
