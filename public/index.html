@@ -121,33 +121,38 @@
         </button>
       </header>
 
-      <div id="webrtc-stage" class="hidden flex-col bg-[#06070a] border-b border-purple-500/20 p-4">
-        <div class="flex items-center justify-between mb-3 text-xs">
-          <span id="rtc-turn-status" class="text-emerald-400 font-medium">WebRTC Ativo (Modo Local/Mesh)</span>
-          <div class="flex gap-2">
-            <label class="sr-only" for="mic-select">Microfone</label><select id="mic-select" class="bg-[#12151f] border border-white/10 rounded-lg px-2 py-1 text-[11px] text-slate-300"></select>
-            <label class="sr-only" for="cam-select">Câmera</label><select id="cam-select" class="bg-[#12151f] border border-white/10 rounded-lg px-2 py-1 text-[11px] text-slate-300"></select>
-          </div>
-        </div>
-        <div id="video-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-72 overflow-y-auto">
-          <div id="local-video-card" class="relative aspect-video rounded-2xl bg-[#12151f] border border-purple-500/30 overflow-hidden flex items-center justify-center">
-            <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover hidden"></video>
-            <div id="local-avatar-placeholder" class="flex flex-col items-center gap-2">
-              <div class="w-14 h-14 rounded-full bg-purple-600/30 text-purple-300 font-bold text-lg flex items-center justify-center" id="rtc-local-initials">U</div>
-              <span class="text-xs text-slate-300">Câmera desligada</span>
-            </div>
-            <span id="rtc-local-name" class="absolute bottom-2 left-2 px-2.5 py-0.5 rounded bg-black/75 text-xs">Você</span>
-          </div>
-        </div>
-        <div class="flex justify-center gap-3 mt-3">
-          <button onclick="WebRTCManager.toggleMic()" class="px-4 py-2 rounded-xl bg-[#12151f] hover:bg-purple-600/30 border border-white/10 text-xs">Microfone</button>
-          <button onclick="WebRTCManager.toggleCamera()" class="px-4 py-2 rounded-xl bg-[#12151f] hover:bg-purple-600/30 border border-white/10 text-xs">Câmera</button>
-          <button onclick="WebRTCManager.shareScreen()" class="px-4 py-2 rounded-xl bg-[#12151f] hover:bg-purple-600/30 border border-white/10 text-xs">Tela</button>
-          <button onclick="WebRTCManager.leaveRoom()" class="px-4 py-2 rounded-xl bg-rose-600 text-xs font-semibold text-white">Encerrar</button>
-        </div>
+      <div id="webrtc-stage" class="hidden hc-call-stage">
+  <header class="hc-call-header">
+    <div class="hc-call-brand"><span class="hc-call-brand-mark">H</span><div><strong>HIPPO CONECTA</strong><small id="voice-channel-label">Sala de chamada</small></div></div>
+    <div class="hc-call-live"><i></i><span>AO VIVO</span><b id="rtc-turn-status">Conectando mídia…</b></div>
+    <div class="hc-call-device-selects">
+      <label for="mic-select">MIC</label><select id="mic-select" aria-label="Selecionar microfone"></select>
+      <label for="cam-select">CÂM</label><select id="cam-select" aria-label="Selecionar câmera"></select>
+    </div>
+  </header>
+  <main class="hc-call-main">
+    <div class="hc-call-stage-heading"><div><span class="hc-call-eyebrow">ESPAÇO DE VOZ</span><h2 id="hc-call-room-title">Chamada em andamento</h2><p>Conecte-se com sua comunidade em tempo real.</p></div><div class="hc-call-encryption"><span>✦</span> Conexão em tempo real</div></div>
+    <div id="video-grid" class="hc-call-grid">
+      <div id="local-video-card" class="hc-call-tile hc-call-local">
+        <video id="local-video" autoplay muted playsinline class="w-full h-full object-cover hidden"></video>
+        <div id="local-avatar-placeholder" class="hc-call-avatar-placeholder"><div class="hc-call-avatar" id="rtc-local-initials">U</div><strong>Você</strong><span>Câmera desligada</span></div>
+        <div class="hc-call-tile-caption"><span class="hc-call-speaking-dot"></span><span id="rtc-local-name">Você</span><small>Este dispositivo</small></div>
       </div>
+    </div>
+    <div class="hc-call-footer">
+      <div class="hc-call-footer-info"><span class="hc-call-secure-icon">✦</span><div><strong>HIPPO CONECTA</strong><small>Áudio e vídeo em tempo real</small></div></div>
+      <div class="hc-call-controls">
+        <button id="hc-mic-control" class="hc-call-control" type="button" onclick="WebRTCManager.toggleMic()" aria-label="Desligar microfone"><span class="hc-control-icon">♬</span><small>Microfone</small></button>
+        <button id="hc-cam-control" class="hc-call-control" type="button" onclick="WebRTCManager.toggleCamera()" aria-label="Desligar câmera"><span class="hc-control-icon">▣</span><small>Câmera</small></button>
+        <button id="hc-screen-control" class="hc-call-control" type="button" onclick="WebRTCManager.shareScreen()" aria-label="Compartilhar tela"><span class="hc-control-icon">▤</span><small>Compartilhar</small></button>
+        <button class="hc-call-control hc-call-hangup" type="button" onclick="WebRTCManager.leaveRoom()" aria-label="Desligar chamada"><span class="hc-control-icon">☎</span><small>Desligar</small></button>
+      </div>
+      <div class="hc-call-footer-meta"><span class="hc-call-online-dot"></span> Chamada protegida</div>
+    </div>
+  </main>
+</div>
 
-      <div id="messages-container" class="flex-1 overflow-y-auto p-5 space-y-3"></div>
+<div id="messages-container" class="flex-1 overflow-y-auto p-5 space-y-3"></div>
 
       <div id="reply-banner" class="hidden mx-4 px-3 py-1.5 bg-[#12151f] rounded-t-xl border-t border-x border-purple-500/30 flex justify-between text-xs">
         <span>Respondendo a <strong id="reply-target-user" class="text-purple-400"></strong></span>
