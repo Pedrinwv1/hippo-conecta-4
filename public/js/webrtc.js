@@ -115,6 +115,7 @@ const WebRTCManager = {
       });
     });
     room.on(sdk.RoomEvent.MediaDevicesError, error => UI.toast('Falha no microfone/câmera: ' + (error?.message || 'verifique as permissões.'), 'error'));
+    room.on(sdk.RoomEvent.AudioPlaybackStatusChanged, () => { if (!room.canPlaybackAudio) this.promptLiveKitAudioUnlock(room); else document.getElementById('hc-livekit-audio-unlock')?.remove(); });
     try {
       await room.connect(config.url, config.token);
       this.sfuMode = true; this.micOn = false; this.camOn = false;
@@ -129,6 +130,7 @@ const WebRTCManager = {
       room.remoteParticipants.forEach(participant => this.ensureLiveKitTile(participant));
       if (API.socket?.connected) API.socket.emit('rtc:sfu-presence-join', { roomId });
       await room.startAudio().catch(() => {});
+      if (!room.canPlaybackAudio) this.promptLiveKitAudioUnlock(room);
       this.playUiSound('join'); this.refreshCallControls(); UI.toast('Conectado à chamada LiveKit.');
       return true;
     } catch (error) {
@@ -138,6 +140,20 @@ const WebRTCManager = {
       UI.toast('LiveKit não conseguiu iniciar: ' + (error?.message || 'erro de conexão'), 'error');
       return false;
     }
+  },
+  promptLiveKitAudioUnlock(room) {
+    if (document.getElementById('hc-livekit-audio-unlock')) return;
+    const stage = document.getElementById('webrtc-stage'); if (!stage) return;
+    const button = document.createElement('button');
+    button.id = 'hc-livekit-audio-unlock';
+    button.type = 'button';
+    button.className = 'absolute top-4 left-1/2 -translate-x-1/2 z-30 rounded-xl bg-violet-600 px-4 py-3 text-sm font-bold text-white shadow-xl';
+    button.textContent = 'Ativar áudio da chamada';
+    button.addEventListener('click', async () => {
+      try { await room.startAudio(); button.remove(); }
+      catch (error) { UI.toast('O navegador bloqueou o áudio. Clique novamente ou confira a saída de som.', 'error'); }
+    });
+    stage.appendChild(button);
   },
   ensureLiveKitTile(participant, local = false) {
     const id = local ? 'local-video-card' : 'peer-card-' + participant.identity;
