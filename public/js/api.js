@@ -27,7 +27,11 @@ const API = {
     this.socket.on('connect', () => {
       const el = document.getElementById('conn-status');
       if (el) { el.textContent = 'Conectado'; el.className = 'text-[10px] text-emerald-400 truncate'; }
-      if (WebRTCManager.currentRoomId) this.socket.emit('rtc:join-room', { roomId: WebRTCManager.currentRoomId });
+      if (WebRTCManager.currentRoomId) {
+        if (WebRTCManager.sfuMode) this.socket.emit('rtc:sfu-presence-join', { roomId: WebRTCManager.currentRoomId });
+        else this.socket.emit('rtc:join-room', { roomId: WebRTCManager.currentRoomId });
+      }
+      window.FriendManager?.refresh();
     });
     this.socket.on('disconnect', reason => {
       WebRTCManager.resetPeersForReconnect();
