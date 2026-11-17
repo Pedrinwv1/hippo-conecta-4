@@ -27,3 +27,9 @@ services:
         value: stun:stun.l.google.com:19302
       - key: TURN_URLS
         value: ""
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
