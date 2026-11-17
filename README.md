@@ -56,3 +56,4 @@ Ainda pendente para lançamento: integração do cliente de mídia com SFU (a to
 Note: push delivery while the Android app is fully closed still requires Firebase Cloud Messaging credentials and a configured Firebase project. The current implementation covers in-app alerts and supported browser notifications while the app session is active.
 
 Build de distribuição 5.4.0 validado no GitHub Actions; a publicação utiliza os artefatos APK e EXE já compilados e verificados.
+Publicação 5.4.0: artefatos previamente validados com permissão de leitura do GitHub Actions habilitada para o job de release.
