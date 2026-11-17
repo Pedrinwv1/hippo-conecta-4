@@ -64,20 +64,32 @@ jobs:
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           python3 - <<'PY'
+          import xml.etree.ElementTree as ET
           from pathlib import Path
-          p = Path("android/app/src/main/AndroidManifest.xml")
-          s = p.read_text()
-          permissions = [
+          path = Path("android/app/src/main/AndroidManifest.xml")
+          tree = ET.parse(path)
+          root = tree.getroot()
+          android = "{http://schemas.android.com/apk/res/android}"
+          required = [
               "android.permission.INTERNET",
               "android.permission.RECORD_AUDIO",
               "android.permission.CAMERA",
               "android.permission.MODIFY_AUDIO_SETTINGS",
+              "android.permission.POST_NOTIFICATIONS",
           ]
-          for permission in permissions:
-              tag = f'<uses-permission android:name="{permission}" />'
-              if tag not in s:
-                  s = s.replace("<application", f"    {tag}\n    <application", 1)
-          p.write_text(s)
+          existing = {node.get(android + "name") for node in root.findall("uses-permission")}
+          for permission in required:
+              if permission not in existing:
+                  ET.SubElement(root, "uses-permission", {android + "name": permission})
+          application = root.find("application")
+          if application is not None:
+              application.set(android + "hardwareAccelerated", "true")
+              application.set(android + "usesCleartextTraffic", "false")
+              for activity in application.findall("activity"):
+                  if activity.get(android + "name", "").endswith("MainActivity"):
+                      activity.set(android + "windowSoftInputMode", "adjustResize")
+          ET.indent(tree, space="    ")
+          tree.write(path, encoding="utf-8", xml_declaration=True)
           PY
           ICON="public/icons/icon-512.png"
           RES="android/app/src/main/res"
@@ -106,7 +118,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HIPPO_CONECTA_5.3.0_APK
+          name: HIPPO_CONECTA_5.4.0_APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
@@ -129,14 +141,14 @@ jobs:
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: HIPPO_CONECTA_5.3.0_EXE
+          name: HIPPO_CONECTA_5.4.0_EXE
           path: release/*.exe
           if-no-files-found: error
           retention-days: 14
 
   publish-release:
     name: Publish public GitHub release
-    if: github.event_name == 'push' && github.event.head_commit.message == 'Launch HIPPO CONECTA 5.3.0 public installers'
+    if: github.event_name == 'push' && github.event.head_commit.message == 'Launch HIPPO CONECTA 5.4.0 public installers'
     needs: [android-apk, windows-exe]
     runs-on: ubuntu-latest
     permissions:
@@ -145,18 +157,18 @@ jobs:
       - name: Download Android APK
         uses: actions/download-artifact@v4
         with:
-          name: HIPPO_CONECTA_5.3.0_APK
+          name: HIPPO_CONECTA_5.4.0_APK
           path: release-files
       - name: Download Windows EXE
         uses: actions/download-artifact@v4
         with:
-          name: HIPPO_CONECTA_5.3.0_EXE
+          name: HIPPO_CONECTA_5.4.0_EXE
           path: release-files
       - name: Publish public release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v5.3.0
-          name: HIPPO CONECTA 5.3.0
+          tag_name: v5.4.0
+          name: HIPPO CONECTA 5.4.0
           generate_release_notes: true
           make_latest: true
           files: |
