@@ -941,3 +941,43 @@ input,textarea,select{accent-color:#e8e8e8}
   #app-shell > section > form > label { flex-basis: 36px !important; width: 36px !important; }
   #app-shell > section > form > button[type="submit"] { min-width: 58px !important; padding: 0 8px !important; }
 }
+
+
+/* ===== HIPPO CONECTA 5.5 — Obsidian Purple identity ===== */
+:root{
+  --hc-accent:#7C3AED;
+  --hc-accent-bright:#A78BFA;
+  --hc-panel:#09090D;
+  --hc-panel-soft:#111016;
+  --hc-line:rgba(124,58,237,.24);
+  --hc-muted:#A1A1AA;
+  --purple-500:#7C3AED;
+  --purple-600:#7C3AED;
+  --purple-700:#6D28D9;
+}
+html,body{background-color:#050509!important}
+body{background-image:radial-gradient(ellipse at 0% 0%,rgba(124,58,237,.22),transparent 42%),radial-gradient(ellipse at 100% 100%,rgba(124,58,237,.13),transparent 38%)!important}
+#auth-screen{background:radial-gradient(ellipse at 50% 40%,rgba(124,58,237,.22),transparent 56%),#050509!important}
+#auth-screen>div{background:linear-gradient(145deg,#171020,#08080d 72%)!important;border-color:rgba(124,58,237,.42)!important;box-shadow:0 35px 110px rgba(0,0,0,.72),0 0 75px rgba(124,58,237,.17)!important}
+#app-shell{background:#07060b!important}
+#app-shell>nav,#app-shell>aside{background:linear-gradient(180deg,#100d16,#08080d)!important;border-color:rgba(124,58,237,.2)!important}
+#app-shell>section{background:linear-gradient(145deg,#100d16,#08080d 65%,#100b18)!important}
+#app-shell>section>header{background:rgba(12,9,17,.94)!important;border-color:rgba(124,58,237,.2)!important}
+#app-shell button.bg-purple-600,#auth-screen button.bg-purple-600{background:#7C3AED!important}
+#app-shell button.bg-purple-600:hover,#auth-screen button.bg-purple-600:hover{background:#6D28D9!important}
+#app-shell button[class*="purple"],.settings-primary{--tw-ring-color:#7C3AED}
+.hc-login-logo{width:220px;height:220px;object-fit:contain;mask-image:none!important;-webkit-mask-image:none!important;animation:hc-float 4s ease-in-out infinite}
+.hc-side-logo{object-fit:contain;background:#09070f;border:1px solid rgba(124,58,237,.55);box-shadow:0 0 22px rgba(124,58,237,.35)}
+.hc-splash{background:#050509!important}
+.hc-splash img{width:min(66vw,340px);mask-image:none!important;-webkit-mask-image:none!important}
+.hc-splash-bar{background:rgba(124,58,237,.2)!important}
+.hc-splash-bar span{background:#7C3AED!important;box-shadow:0 0 14px #7C3AED!important}
+.settings-primary{background:#7C3AED!important}
+.settings-primary:hover{background:#6D28D9!important}
+#server-list button:hover,#server-list button.active{background:linear-gradient(145deg,#7C3AED,#4C1D95)!important;border-color:rgba(167,139,250,.65)!important}
+#app-shell>section>header button{background:linear-gradient(110deg,#6D28D9,#7C3AED)!important}
+#app-shell>section>form>button[type=submit]{background:linear-gradient(110deg,#6D28D9,#7C3AED)!important}
+#toast-container>div{border-color:rgba(124,58,237,.35)!important}
+.hc-update-banner{position:fixed;z-index:12000;top:12px;left:50%;transform:translateX(-50%);width:min(94vw,560px);display:flex;align-items:center;gap:12px;padding:13px 15px;border:1px solid rgba(167,139,250,.42);border-radius:16px;background:rgba(16,10,25,.97);box-shadow:0 18px 60px rgba(0,0,0,.55),0 0 30px rgba(124,58,237,.18);backdrop-filter:blur(18px);font-size:12px}
+.hc-update-banner button{border:0;border-radius:10px;background:#7C3AED;color:white;padding:9px 12px;font-weight:800;white-space:nowrap}
+.hc-update-banner .hc-update-close{background:transparent;color:#aaa;padding:6px}
