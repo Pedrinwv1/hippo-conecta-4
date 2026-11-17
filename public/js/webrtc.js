@@ -24,6 +24,7 @@ const WebRTCManager = {
     this.micOn = true;
     this.camOn = Boolean(withVideo);
     if (await this.joinLiveKit(roomId, roomName, withVideo)) return;
+    this.currentRoomId = roomId;
     try {
       const config = await API.get('/api/rtc-config');
       this.iceServers = config.iceServers || this.iceServers;
@@ -70,7 +71,7 @@ const WebRTCManager = {
     if (!sdk?.Room || !sdk?.RoomEvent || !sdk?.Track) return false;
     let config;
     try { config = await API.get('/api/sfu/config?roomId=' + encodeURIComponent(roomId)); }
-    catch (error) { console.warn('[livekit] SFU indisponível:', error.message); return false; }
+    catch (error) { console.warn('[livekit] SFU indisponível:', error.message); if (/SFU não configurada/i.test(error.message)) UI.toast('LiveKit ainda não foi configurado no servidor. A chamada usará o modo alternativo.', 'error'); return false; }
     if (!config?.sfuConfigured || !config.url || !config.token) return false;
     const room = new sdk.Room({ adaptiveStream: true, dynacast: true, stopLocalTrackOnUnpublish: true });
     this.livekitRoom = room;
@@ -82,7 +83,12 @@ const WebRTCManager = {
     });
     room.on(sdk.RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
       track.detach().forEach(element => element.remove());
-      if (track.kind === sdk.Track.Kind.Video) document.getElementById('peer-card-' + participant.identity)?.querySelector('video')?.classList.add('hidden');
+      if (track.kind === sdk.Track.Kind.Video) {
+        const local = participant === room.localParticipant;
+        const card = document.getElementById(local ? 'local-video-card' : 'peer-card-' + participant.identity);
+        card?.querySelector('video')?.classList.add('hidden');
+        (local ? document.getElementById('local-avatar-placeholder') : card?.querySelector('.rtc-peer-avatar'))?.classList.remove('hidden');
+      }
     });
     room.on(sdk.RoomEvent.ParticipantConnected, participant => this.ensureLiveKitTile(participant));
     room.on(sdk.RoomEvent.ParticipantDisconnected, participant => document.getElementById('peer-card-' + participant.identity)?.remove());
@@ -141,7 +147,8 @@ const WebRTCManager = {
     video.autoplay = true; video.playsInline = true;
     if (!local) video.className = 'absolute inset-0 w-full h-full object-cover';
     track.attach(video); if (!local && !video.isConnected) card.prepend(video);
-    video.classList.remove('hidden'); card.querySelector('.rtc-peer-avatar')?.classList.add('hidden');
+    video.classList.remove('hidden');
+    (local ? document.getElementById('local-avatar-placeholder') : card.querySelector('.rtc-peer-avatar'))?.classList.add('hidden');
   },
   onDeviceChange() { WebRTCManager.populateDevices().catch(console.warn); },
   async populateDevices() {
