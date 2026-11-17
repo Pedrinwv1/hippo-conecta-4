@@ -1,3 +1,69 @@
+const Notifications = {
+  isEnabled() {
+    return App.state.user?.preferences?.notifications !== false;
+  },
+  async requestPermission() {
+    if (!this.isEnabled()) {
+      UI.toast('Ative primeiro as notificações nas preferências.', 'error');
+      return;
+    }
+    if (!('Notification' in window)) {
+      UI.toast('Este ambiente não oferece notificações do sistema. Os avisos dentro do app continuam ativos.');
+      return;
+    }
+    try {
+      const permission = Notification.permission === 'default'
+        ? await Notification.requestPermission()
+        : Notification.permission;
+      if (permission === 'granted') {
+        const notice = new Notification('HIPPO CONECTA', {
+          body: 'Notificações ativadas neste dispositivo.',
+          icon: '/icons/icon-192.png',
+          tag: 'hippo-notifications-enabled'
+        });
+        notice.onclick = () => window.focus();
+        UI.toast('Notificações do sistema ativadas.');
+      } else {
+        UI.toast(permission === 'denied'
+          ? 'Permissão bloqueada. Libere as notificações nas configurações do navegador.'
+          : 'Permissão de notificações não concedida.', 'error');
+      }
+    } catch (error) {
+      console.warn('[notifications] permission:', error);
+      UI.toast('Não foi possível ativar notificações neste dispositivo.', 'error');
+    }
+  },
+  notify(channelId, message) {
+    if (!this.isEnabled() || !message || message.authorId === App.state.user?.id) return;
+    const channel = App.state.servers.flatMap(server =>
+      (server.channels || []).map(item => ({ ...item, server }))
+    ).find(item => item.id === channelId);
+    const channelName = channel?.name || 'canal';
+    const title = `#${channelName} • ${message.authorName || 'Nova mensagem'}`;
+    const body = message.text || (message.attachment ? 'Enviou um anexo.' : 'Nova mensagem');
+    const focused = document.visibilityState === 'visible' && document.hasFocus();
+    if (focused && App.activeChannelId === channelId) return;
+    UI.toast(`Nova mensagem em #${channelName} de ${message.authorName || 'alguém'}`);
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    try {
+      const notice = new Notification(title, {
+        body: String(body).slice(0, 180),
+        icon: '/icons/icon-192.png',
+        tag: `hippo-${message.id || channelId}`,
+        renotify: false
+      });
+      notice.onclick = () => {
+        window.focus();
+        if (channel?.server) App.selectServer(channel.server.id);
+        App.selectChannel(channelId);
+        notice.close();
+      };
+    } catch (error) {
+      console.warn('[notifications] display:', error);
+    }
+  }
+};
+
 const UI = {
   escapeHTML(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); },
   openModal(id) { document.getElementById(id)?.classList.remove('hidden'); },
@@ -124,6 +190,7 @@ const App = {
     if (!this.state.messages[chId]) this.state.messages[chId] = [];
     this.state.messages[chId].push(msg);
     if (this.activeChannelId === chId) Chat.render();
+    Notifications.notify(chId, msg);
   },
   onUpdatedMessage(chId, msg) {
     const list = this.state.messages[chId] || [];
