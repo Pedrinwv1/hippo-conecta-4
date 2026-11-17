@@ -164,7 +164,11 @@ const WebRTCManager = {
       card.className = 'relative aspect-video rounded-2xl bg-[#12151f] border border-purple-500/20 overflow-hidden flex items-center justify-center';
       const avatar = document.createElement('div'); avatar.className = 'rtc-peer-avatar absolute inset-0 flex items-center justify-center pointer-events-none';
       const name = participant.name || participant.identity || 'Participante';
-      avatar.innerHTML = '<span class="w-16 h-16 rounded-full bg-purple-600/30 text-purple-200 flex items-center justify-center text-xl font-bold">' + this.escapeHTML(name.slice(0,2).toUpperCase()) + '</span>';
+      let avatarUrl = null;
+      try { avatarUrl = JSON.parse(participant.metadata || '{}').avatarUrl || null; } catch {}
+      avatar.innerHTML = avatarUrl
+        ? '<img src="' + this.escapeAttr(avatarUrl) + '" class="w-16 h-16 rounded-full object-cover border-2 border-purple-400/60" alt="">'
+        : '<span class="w-16 h-16 rounded-full bg-purple-600/30 text-purple-200 flex items-center justify-center text-xl font-bold">' + this.escapeHTML(name.slice(0,2).toUpperCase()) + '</span>';
       const label = document.createElement('span'); label.className = 'absolute bottom-2 left-2 px-2.5 py-0.5 rounded bg-black/75 text-xs'; label.textContent = name;
       card.append(avatar, label); grid.appendChild(card);
     }
