@@ -1,8 +1,8 @@
 {
   "name": "hippo-conecta",
-  "version": "5.4.0",
+  "version": "5.5.0",
   "private": true,
-  "description": "HIPPO CONECTA 5.4 — aplicativo Android otimizado e notificações",
+  "description": "HIPPO CONECTA 5.5 — nova identidade Obsidian Purple e avisos de atualização",
   "main": "electron/main.js",
   "scripts": {
     "start": "npm run build:css && node server/index.js",
