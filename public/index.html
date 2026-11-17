@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#7C3AED" />
-  <link rel="icon" type="image/svg+xml" href="/img/hippo-brand.svg" />
+  <link rel="icon" type="image/svg+xml" href="/img/logo-full-512.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
   <link rel="apple-touch-icon" href="/icons/icon-180.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -18,10 +18,10 @@
   <link rel="stylesheet" href="/css/tailwind.css" />
   <script>window.HIPPO_API_BASE = document.querySelector('meta[name="hippo-api-base"]')?.content?.trim() || window.location.origin;</script>
   <script src="https://hippo-conecta.onrender.com/socket.io/socket.io.js"></script>
-  <link rel="stylesheet" href="/css/styles.css?v=5.5.0" />
+  <link rel="stylesheet" href="/css/styles.css?v=5.5.1" />
 </head>
 <body class="bg-[#06070a] text-slate-100 antialiased overflow-hidden select-none">
-  <div id="splash" class="hc-splash" aria-hidden="true"><img src="/img/hippo-brand.svg" alt="" /><div class="hc-splash-bar"><span></span></div></div>
+  <div id="splash" class="hc-splash" aria-hidden="true"><img src="/img/logo-full-512.png" alt="" /><div class="hc-splash-bar"><span></span></div></div>
   <div id="modal-avatar-crop" class="modal-backdrop hidden fixed inset-0 z-[11000] flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
     <div class="w-full max-w-md rounded-2xl border border-white/10 bg-[#11131b] p-5 shadow-2xl">
       <div class="flex items-center justify-between mb-2"><div><h3 class="text-lg font-bold text-white">Ajustar foto de perfil</h3><p class="text-xs text-slate-400 mt-1">Arraste para posicionar e ajuste o zoom.</p></div><button type="button" onclick="Settings.cancelCrop()" class="text-slate-400 hover:text-white text-xl" aria-label="Fechar">×</button></div>
@@ -37,7 +37,7 @@
     <div class="auth-card w-full max-w-md glass-obsidian rounded-3xl p-8 shadow-2xl bg-[#0b0d13]/90 border border-purple-500/20">
       <div class="auth-brand flex flex-col items-center text-center mb-6">
         <span class="auth-kicker">SEU UNIVERSO. SUA CONEXÃO.</span>
-        <img src="/img/hippo-brand.svg" alt="Hippo Conecta" class="hc-login-logo" width="240" height="240" />
+        <img src="/img/logo-full-512.png" alt="Hippo Conecta" class="hc-login-logo" width="240" height="240" />
         <h1 class="sr-only">HIPPO CONECTA</h1>
         <p class="text-xs text-slate-400 mt-1">Comunicação em tempo real, servidores e WebRTC</p>
       </div>
@@ -67,7 +67,7 @@
   <!-- APP SHELL -->
   <main id="app-shell" class="hidden h-screen w-screen flex overflow-hidden">
     <nav class="w-[72px] bg-[#06070a] border-r border-white/5 flex flex-col items-center py-3 gap-3 shrink-0">
-      <img src="/img/hippo-brand.svg" alt="Hippo Conecta" title="Hippo Conecta" class="hc-side-logo" width="44" height="44" />
+      <img src="/img/logo-full-512.png" alt="Hippo Conecta" title="Hippo Conecta" class="hc-side-logo" width="44" height="44" />
       <div class="w-8 h-[1px] bg-white/10"></div>
       <div id="server-list" class="flex-1 flex flex-col items-center gap-2.5 overflow-y-auto w-full"></div>
       <button id="btn-create-server" onclick="UI.openModal('modal-create-server')" title="Criar um novo servidor" aria-label="Criar servidor">
