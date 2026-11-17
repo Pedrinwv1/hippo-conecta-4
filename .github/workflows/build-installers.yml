@@ -58,7 +58,7 @@ jobs:
       - name: Generate Android project
         run: npx cap add android
       - name: Install image processing tools
-        run: sudo apt-get update && sudo apt-get install -y imagemagick
+        run: sudo apt-get update && sudo apt-get install -y imagemagick librsvg2-bin
       - name: Configure Android permissions and launcher icon
         shell: bash
         run: |
@@ -100,7 +100,7 @@ jobs:
           )
           path.write_text(manifest)
           PY
-          ICON="public/icons/icon-512.png"
+          ICON="public/img/hippo-brand.svg"
           RES="android/app/src/main/res"
           if command -v magick >/dev/null 2>&1; then IMG=magick; else IMG=convert; fi
           for spec in "mdpi:48" "hdpi:72" "xhdpi:96" "xxhdpi:144" "xxxhdpi:192"; do
