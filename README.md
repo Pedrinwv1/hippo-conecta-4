@@ -45,3 +45,12 @@ Implementado no código-fonte: configuração Electron, preload isolado, electro
 Dependente de ambiente/serviço: instalar dependências npm, gerar `android/` via Capacitor/Android SDK, gerar EXE em Windows, gerar APK no Android Studio, configurar TURN/LiveKit/PostgreSQL e executar testes reais em dispositivos/redes externas.
 
 Ainda pendente para lançamento: integração do cliente de mídia com SFU (a topologia ativa continua Mesh P2P), instalação e teste dos serviços externos TURN/LiveKit/PostgreSQL, geração e validação do APK/EXE em seus ambientes-alvo, testes multiusuário em redes distintas, pentest e revisão operacional.
+
+## HIPPO CONECTA 5.4.0
+
+- Android: WebView initialization stabilized, API/Socket.IO endpoint initialized explicitly, viewport safe areas and keyboard resizing configured.
+- Notifications: message alerts respect the user's saved preference; browser/system notifications are requested only after user action, with in-app alerts as fallback.
+- Android build: launcher assets, camera/microphone/internet and notification permissions are configured in the generated manifest.
+- The Windows desktop installer remains available in the same release.
+
+Note: push delivery while the Android app is fully closed still requires Firebase Cloud Messaging credentials and a configured Firebase project. The current implementation covers in-app alerts and supported browser notifications while the app session is active.
