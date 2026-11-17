@@ -20,7 +20,7 @@ const Chat = {
   },
   linkify(value) {
     const escaped = this.escapeHTML(value);
-    return escaped.replace(/(https?:\\/\\/[^\\s<]+|www\\.[^\\s<]+)/gi, (match) => {
+    return escaped.replace(/(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi, (match) => {
       let url = match;
       let trailing = '';
       while (/[.,!?;:)]$/.test(url)) { trailing = url.slice(-1) + trailing; url = url.slice(0, -1); }
