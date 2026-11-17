@@ -11,11 +11,39 @@ const Chat = {
         if (action === 'reply') this.reply(messageId);
         if (action === 'delete') this.deleteMsg(messageId);
         if (action === 'react') this.react(messageId, emoji);
+        if (action === 'copy') this.copyMessage(messageId);
       });
     }
   },
   escapeHTML(value) {
     return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  },
+  linkify(value) {
+    const escaped = this.escapeHTML(value);
+    return escaped.replace(/(https?:\\/\\/[^\\s<]+|www\\.[^\\s<]+)/gi, (match) => {
+      let url = match;
+      let trailing = '';
+      while (/[.,!?;:)]$/.test(url)) { trailing = url.slice(-1) + trailing; url = url.slice(0, -1); }
+      const href = url.toLowerCase().startsWith('www.') ? 'https://' + url : url;
+      return '<a href="' + href + '" target="_blank" rel="noopener noreferrer" class="text-purple-300 underline underline-offset-2 hover:text-purple-200 break-all">' + url + '</a>' + trailing;
+    });
+  },
+  async copyMessage(messageId) {
+    const messages = App.state.messages[App.activeChannelId] || [];
+    const message = messages.find(item => item.id === messageId);
+    if (!message) return;
+    const text = message.text || message.attachment?.url || '';
+    if (!text) return UI.toast('Esta mensagem não tem texto ou link para copiar.', 'error');
+    try {
+      await navigator.clipboard.writeText(text);
+      UI.toast('Mensagem copiada.');
+    } catch {
+      const area = document.createElement('textarea');
+      area.value = text; area.style.position = 'fixed'; area.style.opacity = '0';
+      document.body.appendChild(area); area.select();
+      const copied = document.execCommand('copy'); area.remove();
+      UI.toast(copied ? 'Mensagem copiada.' : 'Não foi possível copiar.', copied ? 'success' : 'error');
+    }
   },
   render() {
     const container = document.getElementById('messages-container');
@@ -39,9 +67,9 @@ const Chat = {
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2"><span class="text-sm font-semibold text-white">${this.escapeHTML(m.authorName)}</span><time class="text-[11px] text-slate-500">${time}</time></div>
           ${reply ? `<div class="mt-1 pl-2 border-l-2 border-purple-500/50 text-[11px] text-slate-400">Respondendo a ${this.escapeHTML(reply.authorName)}: ${this.escapeHTML(reply.text || '[anexo]').slice(0, 120)}</div>` : ''}
-          ${m.text ? `<p class="text-sm text-slate-200 mt-0.5 whitespace-pre-wrap break-words">${this.escapeHTML(m.text)}</p>` : ''}${attachment}
+          ${m.text ? `<p class="text-sm text-slate-200 mt-0.5 whitespace-pre-wrap break-words">${this.linkify(m.text)}</p>` : ''}${attachment}
           <div class="flex flex-wrap items-center gap-1 mt-2">${reactions}<button data-action="react" data-message-id="${this.escapeHTML(m.id)}" data-emoji="👍" class="opacity-0 group-hover:opacity-100 px-2 py-1 rounded-lg bg-white/5 text-xs text-slate-400 hover:text-white" title="Reagir">＋👍</button>
-            <button data-action="reply" data-message-id="${this.escapeHTML(m.id)}" class="opacity-0 group-hover:opacity-100 text-[11px] text-slate-400 hover:text-purple-300">Responder</button>
+            <button data-action="copy" data-message-id="${this.escapeHTML(m.id)}" class="opacity-0 group-hover:opacity-100 text-[11px] text-slate-400 hover:text-purple-300">Copiar</button><button data-action="reply" data-message-id="${this.escapeHTML(m.id)}" class="opacity-0 group-hover:opacity-100 text-[11px] text-slate-400 hover:text-purple-300">Responder</button>
             ${mine ? `<button data-action="delete" data-message-id="${this.escapeHTML(m.id)}" class="opacity-0 group-hover:opacity-100 text-[11px] text-rose-400">Excluir</button>` : ''}
           </div>
         </div>
