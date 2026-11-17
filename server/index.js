@@ -190,7 +190,8 @@ app.get('/api/sfu/config', authMiddleware, async (req, res) => {
   }
   try {
     const { AccessToken } = require('livekit-server-sdk');
-    const token = new AccessToken(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET, { identity: req.user.id, name: req.user.name, ttl: '1h' });
+    const account = db.users.find(user => user.id === req.user.id);
+    const token = new AccessToken(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET, { identity: req.user.id, name: req.user.name, metadata: JSON.stringify({ avatarUrl: account?.avatarUrl || null }), ttl: '1h' });
     token.addGrant({ roomJoin: true, room: roomId, canPublish: true, canSubscribe: true, canPublishData: true });
     res.json({ url: process.env.LIVEKIT_URL, token: await token.toJwt(), sfuConfigured: true, provider: 'livekit' });
   } catch (err) { console.error('[sfu] token error:', err.message); res.status(503).json({ error: 'Não foi possível gerar credencial SFU.' }); }
