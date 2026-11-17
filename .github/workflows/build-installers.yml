@@ -64,32 +64,41 @@ jobs:
         run: |
           MANIFEST="android/app/src/main/AndroidManifest.xml"
           python3 - <<'PY'
-          import xml.etree.ElementTree as ET
           from pathlib import Path
+          import re
           path = Path("android/app/src/main/AndroidManifest.xml")
-          tree = ET.parse(path)
-          root = tree.getroot()
-          android = "{http://schemas.android.com/apk/res/android}"
-          required = [
+          manifest = path.read_text()
+          permissions = [
               "android.permission.INTERNET",
               "android.permission.RECORD_AUDIO",
               "android.permission.CAMERA",
               "android.permission.MODIFY_AUDIO_SETTINGS",
               "android.permission.POST_NOTIFICATIONS",
           ]
-          existing = {node.get(android + "name") for node in root.findall("uses-permission")}
-          for permission in required:
-              if permission not in existing:
-                  ET.SubElement(root, "uses-permission", {android + "name": permission})
-          application = root.find("application")
-          if application is not None:
-              application.set(android + "hardwareAccelerated", "true")
-              application.set(android + "usesCleartextTraffic", "false")
-              for activity in application.findall("activity"):
-                  if activity.get(android + "name", "").endswith("MainActivity"):
-                      activity.set(android + "windowSoftInputMode", "adjustResize")
-          ET.indent(tree, space="    ")
-          tree.write(path, encoding="utf-8", xml_declaration=True)
+          for permission in permissions:
+              tag = f'<uses-permission android:name="{permission}" />'
+              if tag not in manifest:
+                  manifest = manifest.replace("<application", f"    {tag}\\n    <application", 1)
+          def add_application_flags(match):
+              attrs = match.group(1)
+              if "android:hardwareAccelerated=" not in attrs:
+                  attrs += ' android:hardwareAccelerated="true"'
+              if "android:usesCleartextTraffic=" not in attrs:
+                  attrs += ' android:usesCleartextTraffic="false"'
+              return "<application" + attrs + ">"
+          manifest = re.sub(r"<application\\b([^>]*)>", add_application_flags, manifest, count=1)
+          def add_activity_resize(match):
+              tag = match.group(0)
+              if "android:windowSoftInputMode=" not in tag:
+                  tag = tag[:-1] + ' android:windowSoftInputMode="adjustResize">'
+              return tag
+          manifest = re.sub(
+              r'<activity\\b(?=[^>]*android:name="[^"]*MainActivity")[^>]*>',
+              add_activity_resize,
+              manifest,
+              count=1
+          )
+          path.write_text(manifest)
           PY
           ICON="public/icons/icon-512.png"
           RES="android/app/src/main/res"
