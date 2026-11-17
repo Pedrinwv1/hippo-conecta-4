@@ -1,13 +1,13 @@
 {
-  "name": "Hippo Conecta",
+  "name": "HIPPO CONECTA",
   "short_name": "Hippo",
   "description": "Comunicação em tempo real com servidores, mensagens e chamadas.",
   "lang": "pt-BR",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#7C3AED",
+  "theme_color": "#7C3AED",
   "icons": [
     {
       "src": "/icons/icon-72.png",
