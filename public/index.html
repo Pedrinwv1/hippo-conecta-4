@@ -16,6 +16,7 @@
   <title>HIPPO CONECTA</title>
   <link rel="manifest" href="/manifest.json" />
   <link rel="stylesheet" href="/css/tailwind.css" />
+  <script>window.HIPPO_API_BASE = document.querySelector('meta[name="hippo-api-base"]')?.content?.trim() || window.location.origin;</script>
   <script src="https://hippo-conecta.onrender.com/socket.io/socket.io.js"></script>
   <link rel="stylesheet" href="/css/styles.css?v=5.3.0" />
 </head>
