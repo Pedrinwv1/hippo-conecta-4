@@ -124,6 +124,49 @@ app.post('/api/auth/login', rateLimit({ max: 12 }), async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+
+function friendPair(a, b) { return [a, b].sort().join(':'); }
+function areFriends(db, a, b) { return (db.friendships || []).some(f => friendPair(f.userA, f.userB) === friendPair(a, b)); }
+app.get('/api/friends', authMiddleware, (req, res) => {
+  const db = readDB(), uid = req.user.id;
+  const friends = (db.friendships || []).filter(f => f.userA === uid || f.userB === uid).map(f => {
+    const id = f.userA === uid ? f.userB : f.userA, user = db.users.find(u => u.id === id); if (!user) return null;
+    const active = [...io.sockets.sockets.values()].find(s => s.user?.id === id);
+    const voice = active?.currentRoom ? db.servers.flatMap(server => server.channels.map(c => ({...c, serverName: server.name}))).find(c => c.id === active.currentRoom) : null;
+    return { ...publicUser(user), online: Boolean(active), inCall: Boolean(active?.currentRoom), callChannel: voice?.name || null, callServer: voice?.serverName || null };
+  }).filter(Boolean);
+  const incoming = (db.friendRequests || []).filter(r => r.toUserId === uid).map(r => ({ id:r.id, createdAt:r.createdAt, user:publicUser(db.users.find(u=>u.id===r.fromUserId)||{}) })).filter(r=>r.user.id);
+  const outgoing = (db.friendRequests || []).filter(r => r.fromUserId === uid).map(r => ({ id:r.id, createdAt:r.createdAt, user:publicUser(db.users.find(u=>u.id===r.toUserId)||{}) })).filter(r=>r.user.id);
+  res.json({ friends, incoming, outgoing });
+});
+app.get('/api/users/search', authMiddleware, rateLimit({max:30}), (req,res) => {
+  const q=String(req.query.q||'').trim().toLowerCase().slice(0,80); if(q.length<2) return res.json({users:[]});
+  const db=readDB(), uid=req.user.id;
+  const users=db.users.filter(u=>u.id!==uid&&(u.name.toLowerCase().includes(q)||u.email.toLowerCase()===q)&&!areFriends(db,uid,u.id)&&!(db.friendRequests||[]).some(r=>(r.fromUserId===uid&&r.toUserId===u.id)||(r.fromUserId===u.id&&r.toUserId===uid))).slice(0,12).map(publicUser);
+  res.json({users});
+});
+app.post('/api/friends/request',authMiddleware,rateLimit({max:12}),async(req,res,next)=>{
+  try { const targetId=String(req.body.userId||''); let accepted=false;
+    await updateDB(db=>{ db.friendships||=[]; db.friendRequests||=[];
+      if(!targetId||targetId===req.user.id||!db.users.some(u=>u.id===targetId)){const e=new Error('Usuário não encontrado.');e.status=404;throw e;}
+      if(areFriends(db,req.user.id,targetId)){const e=new Error('Vocês já são amigos.');e.status=409;throw e;}
+      const reverse=db.friendRequests.find(r=>r.fromUserId===targetId&&r.toUserId===req.user.id);
+      if(reverse){db.friendRequests=db.friendRequests.filter(r=>r.id!==reverse.id);db.friendships.push({userA:req.user.id,userB:targetId,createdAt:new Date().toISOString()});accepted=true;return;}
+      if(db.friendRequests.some(r=>r.fromUserId===req.user.id&&r.toUserId===targetId)){const e=new Error('Solicitação já enviada.');e.status=409;throw e;}
+      db.friendRequests.push({id:uuidv4(),fromUserId:req.user.id,toUserId:targetId,createdAt:new Date().toISOString()});
+    });
+    io.to(`user:${targetId}`).emit('friends:changed');io.to(`user:${req.user.id}`).emit('friends:changed');res.status(201).json({ok:true,accepted});
+  } catch(err){next(err);}
+});
+app.post('/api/friends/accept',authMiddleware,async(req,res,next)=>{
+  try {const requestId=String(req.body.requestId||'');let otherId=null;
+    await updateDB(db=>{db.friendships||=[];db.friendRequests||=[];const request=db.friendRequests.find(r=>r.id===requestId&&r.toUserId===req.user.id);if(!request){const e=new Error('Solicitação não encontrada.');e.status=404;throw e;}otherId=request.fromUserId;if(!areFriends(db,req.user.id,otherId))db.friendships.push({userA:req.user.id,userB:otherId,createdAt:new Date().toISOString()});db.friendRequests=db.friendRequests.filter(r=>r.id!==requestId);});
+    io.to(`user:${otherId}`).emit('friends:changed');io.to(`user:${req.user.id}`).emit('friends:changed');res.json({ok:true});
+  }catch(err){next(err);}
+});
+app.delete('/api/friends/request/:id',authMiddleware,async(req,res,next)=>{try{await updateDB(db=>{db.friendRequests||=[];db.friendRequests=db.friendRequests.filter(r=>!(r.id===req.params.id&&(r.fromUserId===req.user.id||r.toUserId===req.user.id)));});res.json({ok:true});}catch(err){next(err);}});
+app.delete('/api/friends/:userId',authMiddleware,async(req,res,next)=>{try{await updateDB(db=>{db.friendships||=[];db.friendships=db.friendships.filter(f=>friendPair(f.userA,f.userB)!==friendPair(req.user.id,req.params.userId));});io.to(`user:${req.params.userId}`).emit('friends:changed');res.json({ok:true});}catch(err){next(err);}});
+
 app.get('/api/rtc-config', authMiddleware, (req, res) => {
   const iceServers = [{ urls: process.env.STUN_URL || 'stun:stun.l.google.com:19302' }];
   const turnUrls = (process.env.TURN_URLS || '').split(',').map(v => v.trim()).filter(Boolean);
@@ -322,6 +365,9 @@ io.use((socket, next) => {
 });
 
 io.on('connection', socket => {
+  socket.join(`user:${socket.user.id}`);
+  const notifyFriendsPresence = () => { const data=readDB(); const ids=(data.friendships||[]).filter(f=>f.userA===socket.user.id||f.userB===socket.user.id).map(f=>f.userA===socket.user.id?f.userB:f.userA); const room=socket.currentRoom?data.servers.flatMap(server=>server.channels.map(c=>({...c,serverName:server.name}))).find(c=>c.id===socket.currentRoom):null; const presence={userId:socket.user.id,name:socket.user.name,avatarUrl:socket.user.avatarUrl||null,online:[...io.sockets.sockets.values()].some(s=>s.user?.id===socket.user.id),inCall:Boolean(socket.currentRoom),callChannel:room?.name||null,callServer:room?.serverName||null}; ids.forEach(id=>io.to(`user:${id}`).emit('friends:presence',presence)); };
+  notifyFriendsPresence();
   const dbAtConnect = readDB();
   const memberServers = dbAtConnect.servers.filter(s => s.members.some(m => m.userId === socket.user.id));
   memberServers.forEach(s => {
@@ -411,6 +457,7 @@ io.on('connection', socket => {
       voiceRooms.set(id, room);
       socket.currentRoom = id;
       await socket.join(id);
+      notifyFriendsPresence();
       socket.emit('rtc:existing-peers', peers);
       socket.to(id).emit('rtc:peer-joined', { socketId: socket.id, userId: socket.user.id, name: socket.user.name, avatarUrl: socket.user.avatarUrl || null });
       socketAck(ack, { ok: true, peers });
@@ -445,10 +492,12 @@ io.on('connection', socket => {
     currentSocket.to(roomId).emit('rtc:peer-left', { socketId: currentSocket.id });
     currentSocket.leave(roomId);
     currentSocket.currentRoom = null;
+    notifyFriendsPresence();
   }
   socket.on('rtc:leave-room', () => leaveVoiceRoom(socket));
   socket.on('disconnect', reason => {
     leaveVoiceRoom(socket);
+    setTimeout(notifyFriendsPresence, 0);
     console.info(`[socket] desconectado user=${socket.user.id} socket=${socket.id} reason=${reason}`);
   });
 });
