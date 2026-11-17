@@ -75,6 +75,21 @@ const WebRTCManager = {
     if (!config?.sfuConfigured || !config.url || !config.token) return false;
     const room = new sdk.Room({ adaptiveStream: true, dynacast: true, stopLocalTrackOnUnpublish: true });
     this.livekitRoom = room;
+    room.on(sdk.RoomEvent.LocalTrackPublished, publication => {
+      if (publication.kind === sdk.Track.Kind.Video && publication.videoTrack) this.renderLiveKitVideo(room.localParticipant, publication.videoTrack);
+      if (publication.source === sdk.Track.Source.ScreenShare) this.screenTrack = true;
+      this.refreshCallControls();
+    });
+    room.on(sdk.RoomEvent.LocalTrackUnpublished, publication => {
+      if (publication.source === sdk.Track.Source.ScreenShare) this.screenTrack = null;
+      const camera = room.localParticipant.getTrackPublication(sdk.Track.Source.Camera);
+      if (camera?.videoTrack) this.renderLiveKitVideo(room.localParticipant, camera.videoTrack);
+      else if (publication.kind === sdk.Track.Kind.Video) {
+        document.getElementById('local-video')?.classList.add('hidden');
+        document.getElementById('local-avatar-placeholder')?.classList.remove('hidden');
+      }
+      this.refreshCallControls();
+    });
     room.on(sdk.RoomEvent.TrackSubscribed, (track, publication, participant) => {
       if (track.kind === sdk.Track.Kind.Audio) {
         const audio = track.attach(); audio.autoplay = true; audio.setAttribute('playsinline', '');
@@ -109,8 +124,8 @@ const WebRTCManager = {
       const label = document.getElementById('voice-channel-label'); if (label) label.textContent = roomName;
       const title = document.getElementById('hc-call-room-title'); if (title) title.textContent = roomName;
       this.ensureLiveKitTile(room.localParticipant, true);
-      await room.localParticipant.setMicrophoneEnabled(true); this.micOn = true;
-      if (withVideo) { await room.localParticipant.setCameraEnabled(true); this.camOn = true; }
+      await room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true, autoGainControl: true }); this.micOn = true;
+      if (withVideo) { await room.localParticipant.setCameraEnabled(true); this.camOn = true; const camera = room.localParticipant.getTrackPublication(sdk.Track.Source.Camera); if (camera?.videoTrack) this.renderLiveKitVideo(room.localParticipant, camera.videoTrack); }
       room.remoteParticipants.forEach(participant => this.ensureLiveKitTile(participant));
       if (API.socket?.connected) API.socket.emit('rtc:sfu-presence-join', { roomId });
       await room.startAudio().catch(() => {});
