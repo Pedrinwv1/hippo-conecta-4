@@ -22,7 +22,7 @@
 </head>
 <body class="bg-[#06070a] text-slate-100 antialiased overflow-hidden select-none">
   <div id="splash" class="hc-splash" aria-hidden="true"><img src="/img/logo-full-512.png" alt="" /><div class="hc-splash-bar"><span></span></div></div>
-  <div id="modal-avatar-crop" class="modal-backdrop hidden fixed inset-0 z-[11000] items-center justify-center bg-black/85 backdrop-blur-md p-4">
+  <div id="modal-avatar-crop" class="modal-backdrop hidden fixed inset-0 z-[11000] flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
     <div class="w-full max-w-md rounded-2xl border border-white/10 bg-[#11131b] p-5 shadow-2xl">
       <div class="flex items-center justify-between mb-2"><div><h3 class="text-lg font-bold text-white">Ajustar foto de perfil</h3><p class="text-xs text-slate-400 mt-1">Arraste para posicionar e ajuste o zoom.</p></div><button type="button" onclick="Settings.cancelCrop()" class="text-slate-400 hover:text-white text-xl" aria-label="Fechar">×</button></div>
       <div class="mx-auto my-4 w-full max-w-[320px] aspect-square overflow-hidden rounded-2xl border border-purple-400/40 bg-black"><canvas id="avatar-crop-canvas" width="640" height="640" class="w-full h-full touch-none cursor-grab active:cursor-grabbing" onpointerdown="Settings.startCropDrag(event)" onpointermove="Settings.moveCropDrag(event)" onpointerup="Settings.endCropDrag()" onpointercancel="Settings.endCropDrag()"></canvas></div>
