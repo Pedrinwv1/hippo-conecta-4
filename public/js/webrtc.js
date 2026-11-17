@@ -14,129 +14,145 @@ const WebRTCManager = {
   audioContext: null,
   analysers: new Map(),
   animationFrame: null,
+  showCallStage(roomName) {
+    document.getElementById('webrtc-stage')?.classList.remove('hidden');
+    document.getElementById('webrtc-stage')?.classList.add('flex');
+    document.getElementById('voice-status-bar')?.classList.remove('hidden');
+    const label = document.getElementById('voice-channel-label'); if (label) label.textContent = roomName;
+    const title = document.getElementById('hc-call-room-title'); if (title) title.textContent = roomName;
+    const status = document.getElementById('rtc-turn-status'); if (status) { status.textContent = 'Conectando ao LiveKit…'; status.className = 'text-violet-300 font-medium'; }
+  },
   async joinRoom(roomId, roomName, withVideo = false) {
     if (!API.socket?.connected) return UI.toast('Conectando ao servidor. Tente novamente em instantes.', 'error');
     const voiceChannel = App.state.servers.flatMap(server => server.channels).find(channel => channel.id === roomId);
     roomName = roomName || voiceChannel?.name || 'Canal de voz';
     if (this.currentRoomId === roomId) return;
     if (this.currentRoomId) await this.leaveRoom(true);
-    this.currentRoomId = roomId;
-    this.micOn = true;
-    this.camOn = Boolean(withVideo);
+    this.currentRoomId = roomId; this.micOn = true; this.camOn = Boolean(withVideo);
+    this.showCallStage(roomName);
+    // Atualiza a presença imediatamente; não espera o handshake de mídia.
+    API.socket.emit('rtc:sfu-presence-join', { roomId });
     if (await this.joinLiveKit(roomId, roomName, withVideo)) return;
+    // O modo P2P continua disponível como contingência, mas informa claramente o estado.
     this.currentRoomId = roomId;
     try {
-      const config = await API.get('/api/rtc-config');
-      this.iceServers = config.iceServers || this.iceServers;
-      this.iceTransportPolicy = config.transportPolicy || 'all';
-      const turnStatus = document.getElementById('rtc-turn-status');
-      if (turnStatus) { turnStatus.textContent = config.turnConfigured ? 'WebRTC • TURN configurado' : 'WebRTC • STUN somente (TURN não configurado)'; turnStatus.className = config.turnConfigured ? 'text-emerald-400 font-medium' : 'text-amber-400 font-medium'; }
-      this.localStream = new MediaStream();
-      try {
-        const preferredMic = localStorage.getItem('hippo_settings-mic');
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: { ...(preferredMic ? { deviceId: { exact: preferredMic } } : {}), echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false });
-        audioStream.getAudioTracks().forEach(track => this.localStream.addTrack(track));
-      } catch (err) { this.micOn = false; UI.toast(`Microfone indisponível: ${err.message}`, 'error'); }
-      if (withVideo) {
-        try {
-          const preferredCamera = localStorage.getItem('hippo_settings-camera');
-          const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: { ...(preferredCamera ? { deviceId: { exact: preferredCamera } } : {}), width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30, max: 30 } } });
-          videoStream.getVideoTracks().forEach(track => this.localStream.addTrack(track));
-        } catch (err) { this.camOn = false; UI.toast(`Câmera indisponível: ${err.message}`, 'error'); }
+      const [configResult, audioResult, videoResult] = await Promise.allSettled([
+        API.get('/api/rtc-config'),
+        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: false }),
+        withVideo ? navigator.mediaDevices.getUserMedia({ audio: false, video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30, max: 30 } } }) : Promise.resolve(null)
+      ]);
+      if (configResult.status === 'fulfilled') {
+        const config = configResult.value; this.iceServers = config.iceServers || this.iceServers; this.iceTransportPolicy = config.transportPolicy || 'all';
+        const turnStatus = document.getElementById('rtc-turn-status');
+        if (turnStatus) { turnStatus.textContent = config.turnConfigured ? 'WebRTC • TURN configurado' : 'WebRTC • STUN somente (TURN não configurado)'; turnStatus.className = config.turnConfigured ? 'text-emerald-400 font-medium' : 'text-amber-400 font-medium'; }
       }
+      this.localStream = new MediaStream();
+      if (audioResult.status === 'fulfilled') audioResult.value.getAudioTracks().forEach(track => this.localStream.addTrack(track));
+      else { this.micOn = false; UI.toast('Microfone indisponível: ' + audioResult.reason.message, 'error'); }
+      if (withVideo && videoResult.status === 'fulfilled' && videoResult.value) videoResult.value.getVideoTracks().forEach(track => this.localStream.addTrack(track));
+      else if (withVideo) this.camOn = false;
       this.cameraTrack = this.localStream.getVideoTracks()[0] || null;
       this.attachLocalVideo(Boolean(this.cameraTrack));
       this.startAnalyser('local', this.localStream, 'local-video-card');
-      await this.populateDevices().catch(err => console.warn('[webrtc] não foi possível listar dispositivos:', err));
-    } catch (err) {
-      this.localStream = new MediaStream(); this.micOn = false; this.camOn = false;
-      UI.toast(`Dispositivos de mídia indisponíveis: ${err.message}. Você entrará sem mídia.`, 'error');
-    }
-    document.getElementById('webrtc-stage').classList.remove('hidden');
-    document.getElementById('webrtc-stage').classList.add('flex');
-    document.getElementById('voice-status-bar').classList.remove('hidden');
-    document.getElementById('voice-channel-label').textContent = roomName;
+      await this.populateDevices().catch(err => console.warn('[webrtc] lista de dispositivos:', err));
+    } catch (err) { this.localStream = new MediaStream(); this.micOn = false; this.camOn = false; UI.toast('Não foi possível iniciar os dispositivos: ' + err.message, 'error'); }
     const result = await new Promise(resolve => API.socket.emit('rtc:join-room', { roomId }, resolve));
     if (!result?.ok) { await this.leaveRoom(true); return UI.toast(result?.error || 'Não foi possível entrar no canal.', 'error'); }
-    const callTitle = document.getElementById('hc-call-room-title');
-    if (callTitle) callTitle.textContent = roomName;
-    this.playUiSound('join');
-    this.refreshCallControls();
-    if (!navigator.mediaDevices?.addEventListener) return;
-    navigator.mediaDevices.addEventListener('devicechange', this.onDeviceChange);
+    this.playUiSound('join'); this.refreshCallControls();
+    navigator.mediaDevices?.addEventListener?.('devicechange', this.onDeviceChange);
   },
 
   async joinLiveKit(roomId, roomName, withVideo = false) {
     const sdk = window.LivekitClient;
-    if (!sdk?.Room || !sdk?.RoomEvent || !sdk?.Track) return false;
-    let config;
-    try { config = await API.get('/api/sfu/config?roomId=' + encodeURIComponent(roomId)); }
-    catch (error) { console.warn('[livekit] SFU indisponível:', error.message); if (/SFU não configurada/i.test(error.message)) UI.toast('LiveKit ainda não foi configurado no servidor. A chamada usará o modo alternativo.', 'error'); return false; }
-    if (!config?.sfuConfigured || !config.url || !config.token) return false;
-    const room = new sdk.Room({ adaptiveStream: true, dynacast: true, stopLocalTrackOnUnpublish: true });
-    this.livekitRoom = room;
-    room.on(sdk.RoomEvent.LocalTrackPublished, publication => {
-      if (publication.kind === sdk.Track.Kind.Video && publication.videoTrack) this.renderLiveKitVideo(room.localParticipant, publication.videoTrack);
-      if (publication.source === sdk.Track.Source.ScreenShare) this.screenTrack = true;
-      this.refreshCallControls();
-    });
-    room.on(sdk.RoomEvent.LocalTrackUnpublished, publication => {
-      if (publication.source === sdk.Track.Source.ScreenShare) this.screenTrack = null;
-      const camera = room.localParticipant.getTrackPublication(sdk.Track.Source.Camera);
-      if (camera?.videoTrack) this.renderLiveKitVideo(room.localParticipant, camera.videoTrack);
-      else if (publication.kind === sdk.Track.Kind.Video) {
-        document.getElementById('local-video')?.classList.add('hidden');
-        document.getElementById('local-avatar-placeholder')?.classList.remove('hidden');
-      }
-      this.refreshCallControls();
-    });
-    room.on(sdk.RoomEvent.TrackSubscribed, (track, publication, participant) => {
-      if (track.kind === sdk.Track.Kind.Audio) {
-        const audio = track.attach(); audio.autoplay = true; audio.setAttribute('playsinline', '');
-        audio.dataset.livekitParticipant = participant.identity; document.body.appendChild(audio);
-      } else if (track.kind === sdk.Track.Kind.Video) this.renderLiveKitVideo(participant, track);
-    });
-    room.on(sdk.RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
-      track.detach().forEach(element => element.remove());
-      if (track.kind === sdk.Track.Kind.Video) {
-        const local = participant === room.localParticipant;
-        const card = document.getElementById(local ? 'local-video-card' : 'peer-card-' + participant.identity);
-        card?.querySelector('video')?.classList.add('hidden');
-        (local ? document.getElementById('local-avatar-placeholder') : card?.querySelector('.rtc-peer-avatar'))?.classList.remove('hidden');
-      }
-    });
-    room.on(sdk.RoomEvent.ParticipantConnected, participant => this.ensureLiveKitTile(participant));
-    room.on(sdk.RoomEvent.ParticipantDisconnected, participant => document.getElementById('peer-card-' + participant.identity)?.remove());
-    room.on(sdk.RoomEvent.ActiveSpeakersChanged, speakers => {
-      document.querySelectorAll('#local-video-card, [id^="peer-card-"]').forEach(card => card.classList.remove('speaking-ring'));
-      speakers.forEach(participant => {
-        const id = participant.identity === room.localParticipant.identity ? 'local-video-card' : 'peer-card-' + participant.identity;
-        document.getElementById(id)?.classList.add('speaking-ring');
-      });
-    });
-    room.on(sdk.RoomEvent.MediaDevicesError, error => UI.toast('Falha no microfone/câmera: ' + (error?.message || 'verifique as permissões.'), 'error'));
-    room.on(sdk.RoomEvent.AudioPlaybackStatusChanged, () => { if (!room.canPlaybackAudio) this.promptLiveKitAudioUnlock(room); else document.getElementById('hc-livekit-audio-unlock')?.remove(); });
+    if (!sdk?.Room || !sdk?.RoomEvent || !sdk?.Track || typeof sdk.createLocalAudioTrack !== 'function') {
+      console.error('[livekit] SDK não carregado ou incompatível:', sdk);
+      return false;
+    }
+    const status = document.getElementById('rtc-turn-status');
+    if (status) { status.textContent = 'Preparando microfone e LiveKit…'; status.className = 'text-violet-300 font-medium'; }
+    let room = null, micTrack = null, cameraTrack = null;
     try {
-      await room.connect(config.url, config.token);
+      // Permissão/captura do microfone ocorre em paralelo à emissão do token.
+      const [config, micResult, cameraResult] = await Promise.all([
+        API.get('/api/sfu/config?roomId=' + encodeURIComponent(roomId)),
+        sdk.createLocalAudioTrack({ echoCancellation: true, noiseSuppression: true, autoGainControl: true }).then(track => ({ track })).catch(error => ({ error })),
+        withVideo && typeof sdk.createLocalVideoTrack === 'function'
+          ? sdk.createLocalVideoTrack({ resolution: { width: 1280, height: 720 }, frameRate: 30 }).then(track => ({ track })).catch(error => ({ error }))
+          : Promise.resolve(null)
+      ]);
+      if (!config?.sfuConfigured || !config.url || !config.token) {
+        micResult.track?.stop(); cameraResult?.track?.stop();
+        return false;
+      }
+      micTrack = micResult.track || null; cameraTrack = cameraResult?.track || null;
+      if (!micTrack) UI.toast('Não foi possível abrir o microfone: ' + (micResult.error?.message || 'permissão negada'), 'error');
+      if (withVideo && !cameraTrack) UI.toast('Câmera indisponível: ' + (cameraResult?.error?.message || 'verifique a permissão.'), 'error');
+
+      room = new sdk.Room({ adaptiveStream: true, dynacast: true, stopLocalTrackOnUnpublish: true });
+      this.livekitRoom = room;
+      room.on(sdk.RoomEvent.LocalTrackPublished, publication => {
+        if (publication.kind === sdk.Track.Kind.Video && publication.videoTrack) this.renderLiveKitVideo(room.localParticipant, publication.videoTrack);
+        if (publication.source === sdk.Track.Source.ScreenShare) this.screenTrack = true;
+        this.refreshCallControls();
+      });
+      room.on(sdk.RoomEvent.LocalTrackUnpublished, publication => {
+        if (publication.source === sdk.Track.Source.ScreenShare) this.screenTrack = null;
+        const camera = room.localParticipant.getTrackPublication(sdk.Track.Source.Camera);
+        if (camera?.videoTrack) this.renderLiveKitVideo(room.localParticipant, camera.videoTrack);
+        else if (publication.kind === sdk.Track.Kind.Video) {
+          document.getElementById('local-video')?.classList.add('hidden');
+          document.getElementById('local-avatar-placeholder')?.classList.remove('hidden');
+        }
+        this.refreshCallControls();
+      });
+      room.on(sdk.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+        if (track.kind === sdk.Track.Kind.Audio) {
+          const audio = track.attach(); audio.autoplay = true; audio.setAttribute('playsinline', '');
+          audio.dataset.livekitParticipant = participant.identity; document.body.appendChild(audio);
+          audio.play?.().catch(() => this.promptLiveKitAudioUnlock(room));
+        } else if (track.kind === sdk.Track.Kind.Video) this.renderLiveKitVideo(participant, track);
+      });
+      room.on(sdk.RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
+        track.detach().forEach(element => element.remove());
+        if (track.kind === sdk.Track.Kind.Video) {
+          const local = participant === room.localParticipant;
+          const card = document.getElementById(local ? 'local-video-card' : 'peer-card-' + participant.identity);
+          card?.querySelector('video')?.classList.add('hidden');
+          (local ? document.getElementById('local-avatar-placeholder') : card?.querySelector('.rtc-peer-avatar'))?.classList.remove('hidden');
+        }
+      });
+      room.on(sdk.RoomEvent.ParticipantConnected, participant => this.ensureLiveKitTile(participant));
+      room.on(sdk.RoomEvent.ParticipantDisconnected, participant => document.getElementById('peer-card-' + participant.identity)?.remove());
+      room.on(sdk.RoomEvent.ActiveSpeakersChanged, speakers => {
+        document.querySelectorAll('#local-video-card, [id^="peer-card-"]').forEach(card => card.classList.remove('speaking-ring'));
+        speakers.forEach(participant => {
+          const id = participant.identity === room.localParticipant.identity ? 'local-video-card' : 'peer-card-' + participant.identity;
+          document.getElementById(id)?.classList.add('speaking-ring');
+        });
+      });
+      room.on(sdk.RoomEvent.MediaDevicesError, error => UI.toast('Falha no microfone/câmera: ' + (error?.message || 'verifique as permissões.'), 'error'));
+      room.on(sdk.RoomEvent.AudioPlaybackStatusChanged, () => { if (!room.canPlaybackAudio) this.promptLiveKitAudioUnlock(room); else document.getElementById('hc-livekit-audio-unlock')?.remove(); });
+
+      await room.connect(config.url, config.token, { autoSubscribe: true });
       this.sfuMode = true; this.micOn = false; this.camOn = false;
-      document.getElementById('webrtc-stage')?.classList.remove('hidden');
-      document.getElementById('webrtc-stage')?.classList.add('flex');
-      document.getElementById('voice-status-bar')?.classList.remove('hidden');
-      const label = document.getElementById('voice-channel-label'); if (label) label.textContent = roomName;
-      const title = document.getElementById('hc-call-room-title'); if (title) title.textContent = roomName;
       this.ensureLiveKitTile(room.localParticipant, true);
-      await room.localParticipant.setMicrophoneEnabled(true, { echoCancellation: true, noiseSuppression: true, autoGainControl: true }); this.micOn = true;
-      if (withVideo) { await room.localParticipant.setCameraEnabled(true); this.camOn = true; const camera = room.localParticipant.getTrackPublication(sdk.Track.Source.Camera); if (camera?.videoTrack) this.renderLiveKitVideo(room.localParticipant, camera.videoTrack); }
+      // Publica as tracks já capturadas: não abre o microfone depois do handshake.
+      if (micTrack) { await room.localParticipant.publishTrack(micTrack, { source: sdk.Track.Source.Microphone }); this.micOn = true; }
+      if (cameraTrack) { await room.localParticipant.publishTrack(cameraTrack, { source: sdk.Track.Source.Camera }); this.camOn = true; this.cameraTrack = cameraTrack; this.renderLiveKitVideo(room.localParticipant, cameraTrack); }
       room.remoteParticipants.forEach(participant => this.ensureLiveKitTile(participant));
-      if (API.socket?.connected) API.socket.emit('rtc:sfu-presence-join', { roomId });
+      const liveStatus = document.getElementById('rtc-turn-status');
+      if (liveStatus) { liveStatus.textContent = 'LiveKit • conectado'; liveStatus.className = 'text-emerald-400 font-medium'; }
       await room.startAudio().catch(() => {});
       if (!room.canPlaybackAudio) this.promptLiveKitAudioUnlock(room);
-      this.playUiSound('join'); this.refreshCallControls(); UI.toast('Conectado à chamada LiveKit.');
+      this.playUiSound('join'); this.refreshCallControls();
+      navigator.mediaDevices?.addEventListener?.('devicechange', this.onDeviceChange);
       return true;
     } catch (error) {
       console.error('[livekit] falha ao entrar:', error);
-      try { room.disconnect(); } catch {}
-      this.livekitRoom = null; this.sfuMode = false; this.currentRoomId = null; this.micOn = false;
+      try { micTrack?.stop(); cameraTrack?.stop(); room?.disconnect(); } catch {}
+      this.livekitRoom = null; this.sfuMode = false;
+      const liveStatus = document.getElementById('rtc-turn-status');
+      if (liveStatus) { liveStatus.textContent = 'Falha no LiveKit'; liveStatus.className = 'text-red-400 font-medium'; }
       UI.toast('LiveKit não conseguiu iniciar: ' + (error?.message || 'erro de conexão'), 'error');
       return false;
     }
