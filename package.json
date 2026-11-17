@@ -1,8 +1,8 @@
 {
   "name": "hippo-conecta",
-  "version": "5.7.0",
+  "version": "5.7.1",
   "private": true,
-  "description": "HIPPO CONECTA 5.7 — chamadas LiveKit, presença de amigos e indicador de voz",
+  "description": "HIPPO CONECTA 5.7.1 — LiveKit no Windows e presença de chamada sincronizada",
   "main": "electron/main.js",
   "scripts": {
     "start": "npm run build:css && node server/index.js",
