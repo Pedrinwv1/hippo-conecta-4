@@ -218,3 +218,26 @@ window.addEventListener('DOMContentLoaded', () => {
     if (event.key === 'Escape') UI.closeModals();
   });
 });
+
+async function checkHippoUpdates() {
+  const installed = [5,5,0];
+  const compare = (a,b) => {
+    const aa=String(a).replace(/^v/,'').split('.').map(Number), bb=String(b).replace(/^v/,'').split('.').map(Number);
+    for(let i=0;i<3;i++){if((aa[i]||0)>(bb[i]||0))return 1;if((aa[i]||0)<(bb[i]||0))return -1;}
+    return 0;
+  };
+  try {
+    const response = await fetch('https://api.github.com/repos/Pedrinwv1/hippo-conecta-4/releases/latest',{headers:{Accept:'application/vnd.github+json'},cache:'no-store'});
+    if(!response.ok) return;
+    const release = await response.json();
+    const latest = String(release.tag_name||'').replace(/^v/,'');
+    if(!latest || compare(latest,installed.join('.'))<=0) return;
+    const banner=document.createElement('aside');
+    banner.className='hc-update-banner';
+    banner.innerHTML='<span aria-hidden="true" style="font-size:22px">✦</span><div style="flex:1;min-width:0"><strong style="display:block;color:#fff">Nova versão do HIPPO CONECTA</strong><span style="color:#c4b5fd">Versão '+latest+' disponível. Atualize para receber as novidades.</span></div><button type="button" id="hc-update-open">Atualizar</button><button type="button" class="hc-update-close" aria-label="Fechar">×</button>';
+    document.body.appendChild(banner);
+    banner.querySelector('#hc-update-open').addEventListener('click',()=>window.open(release.html_url,'_blank','noopener'));
+    banner.querySelector('.hc-update-close').addEventListener('click',()=>banner.remove());
+  } catch(error) { console.info('[updates] Não foi possível verificar atualizações agora.'); }
+}
+window.addEventListener('DOMContentLoaded',()=>{setTimeout(checkHippoUpdates,2500);});
