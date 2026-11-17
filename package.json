@@ -1,8 +1,8 @@
 {
   "name": "hippo-conecta",
-  "version": "5.2.0",
+  "version": "5.3.0",
   "private": true,
-  "description": "HIPPO CONECTA 5.2 — comunicação multiplataforma",
+  "description": "HIPPO CONECTA 5.3 — comunicação multiplataforma",
   "main": "electron/main.js",
   "scripts": {
     "start": "npm run build:css && node server/index.js",
@@ -78,6 +78,6 @@
       "shortcutName": "HIPPO CONECTA",
       "uninstallDisplayName": "HIPPO CONECTA"
     },
-    "artifactName": "HIPPO_CONECTA_4.0_Windows_${version}.${ext}"
+    "artifactName": "HIPPO_CONECTA_${version}_Windows.${ext}"
   }
 }
