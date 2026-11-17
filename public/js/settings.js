@@ -189,10 +189,7 @@ const Settings = {
     this.micTestStream = null;
   },
   async requestNotifications() {
-    if (!('Notification' in window)) return UI.toast('Este navegador não oferece notificações.', 'error');
-    const permission = await Notification.requestPermission();
-    this.deviceStatus?.(`Permissão de notificações: ${permission}`);
-    UI.toast(permission === 'granted' ? 'Notificações permitidas.' : 'Permissão de notificações não concedida.');
+    await Notifications.requestPermission();
   },
   async changePassword(event) {
     event.preventDefault();
