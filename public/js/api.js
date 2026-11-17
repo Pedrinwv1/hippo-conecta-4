@@ -47,7 +47,9 @@ const API = {
     this.socket.on('rtc:signal', data => WebRTCManager.handleSignal(data).catch(err => console.error('[webrtc] signal:', err)));
     this.socket.on('rtc:peer-left', ({ socketId }) => { WebRTCManager.removeRemoteTile(socketId); UI.toast('Um participante saiu da chamada'); });
     this.socket.on('server:member-joined', data => console.info('[server] novo membro', data.user?.name));
-    this.socket.on('friends:changed', () => window.FriendManager?.refresh());\n    this.socket.on('friends:presence', data => window.FriendManager?.presence(data));\n    this.socket.on('profile:updated', user => {
+    this.socket.on('friends:changed', () => window.FriendManager?.refresh());
+    this.socket.on('friends:presence', data => window.FriendManager?.presence(data));
+    this.socket.on('profile:updated', user => {
       if (App.state.user?.id === user.id) Settings.applyUser(user);
       WebRTCManager.updatePeerProfile?.(user);
       App.state.servers.forEach(server => server.members?.forEach(member => { if (member.userId === user.id) { member.name = user.name; member.avatarUrl = user.avatarUrl; } }));
