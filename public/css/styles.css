@@ -981,3 +981,23 @@ body{background-image:radial-gradient(ellipse at 0% 0%,rgba(124,58,237,.22),tran
 .hc-update-banner{position:fixed;z-index:12000;top:12px;left:50%;transform:translateX(-50%);width:min(94vw,560px);display:flex;align-items:center;gap:12px;padding:13px 15px;border:1px solid rgba(167,139,250,.42);border-radius:16px;background:rgba(16,10,25,.97);box-shadow:0 18px 60px rgba(0,0,0,.55),0 0 30px rgba(124,58,237,.18);backdrop-filter:blur(18px);font-size:12px}
 .hc-update-banner button{border:0;border-radius:10px;background:#7C3AED;color:white;padding:9px 12px;font-weight:800;white-space:nowrap}
 .hc-update-banner .hc-update-close{background:transparent;color:#aaa;padding:6px}
+
+
+/* 5.5.1 — logo original sem filtros, máscaras ou recortes */
+.hc-login-logo,.hc-side-logo,.hc-splash img{
+  filter:none!important;
+  -webkit-filter:none!important;
+  mask:none!important;
+  -webkit-mask:none!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  background:transparent!important;
+}
+.hc-login-logo{width:220px!important;height:220px!important;border-radius:0!important}
+.hc-side-logo{width:48px!important;height:48px!important;border-radius:0!important;box-shadow:none!important}
+.hc-splash img{width:min(60vw,320px)!important;height:auto!important;border-radius:0!important}
+#message-input{user-select:text!important;-webkit-user-select:text!important}
+#messages-container article p{user-select:text!important;-webkit-user-select:text!important}
+#messages-container a{cursor:pointer}
+#messages-container button[data-action="copy"]{opacity:.75}
+@media(hover:none){#messages-container button[data-action="copy"]{opacity:1}}
