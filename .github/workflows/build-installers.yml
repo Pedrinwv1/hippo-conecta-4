@@ -158,7 +158,7 @@ jobs:
   publish-release:
     name: Publish public GitHub release
     if: github.event_name == 'push' && github.event.head_commit.message == 'Launch HIPPO CONECTA 5.4.0 public installers'
-    needs: [android-apk, windows-exe]
+    needs: [windows-exe]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -168,11 +168,17 @@ jobs:
         with:
           name: HIPPO_CONECTA_5.4.0_APK
           path: release-files
+          repository: Pedrinwv1/hippo-conecta-4
+          run-id: 44169167972
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Download Windows EXE
         uses: actions/download-artifact@v4
         with:
           name: HIPPO_CONECTA_5.4.0_EXE
           path: release-files
+          repository: Pedrinwv1/hippo-conecta-4
+          run-id: 44169167972
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish public release
         uses: softprops/action-gh-release@v2
         with:
