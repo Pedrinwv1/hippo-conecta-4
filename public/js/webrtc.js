@@ -54,6 +54,10 @@ const WebRTCManager = {
     document.getElementById('voice-channel-label').textContent = roomName;
     const result = await new Promise(resolve => API.socket.emit('rtc:join-room', { roomId }, resolve));
     if (!result?.ok) { await this.leaveRoom(true); return UI.toast(result?.error || 'Não foi possível entrar no canal.', 'error'); }
+    const callTitle = document.getElementById('hc-call-room-title');
+    if (callTitle) callTitle.textContent = roomName;
+    this.playUiSound('join');
+    this.refreshCallControls();
     if (!navigator.mediaDevices?.addEventListener) return;
     navigator.mediaDevices.addEventListener('devicechange', this.onDeviceChange);
   },
@@ -230,6 +234,44 @@ const WebRTCManager = {
       if (!hasSender && track) state.pc.addTrack(track, this.localStream || new MediaStream([track]));
     }
   },
+  playUiSound(kind) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      this.uiAudioContext ||= new AudioCtx();
+      const ctx = this.uiAudioContext;
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      const patterns = {
+        join: [[523.25,0],[659.25,.11],[783.99,.22]],
+        share: [[659.25,0],[880,.09]],
+        mute: [[440,0],[329.63,.08]],
+        unmute: [[392,0],[587.33,.08]],
+        hangup: [[587.33,0],[440,.12],[293.66,.24]],
+        camera: [[523.25,0],[659.25,.08]]
+      };
+      const notes = patterns[kind] || patterns.camera;
+      const now = ctx.currentTime;
+      notes.forEach(([frequency, delay]) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(frequency, now + delay);
+        gain.gain.setValueAtTime(0.0001, now + delay);
+        gain.gain.exponentialRampToValueAtTime(0.075, now + delay + .018);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + .14);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(now + delay); osc.stop(now + delay + .15);
+      });
+    } catch (error) { console.debug('[sound] efeito sonoro indisponível:', error); }
+  },
+  refreshCallControls() {
+    const mic = document.getElementById('hc-mic-control');
+    const cam = document.getElementById('hc-cam-control');
+    const screen = document.getElementById('hc-screen-control');
+    if (mic) { mic.classList.toggle('is-off', !this.micOn); mic.querySelector('small').textContent = this.micOn ? 'Microfone' : 'Silenciado'; mic.setAttribute('aria-label', this.micOn ? 'Desligar microfone' : 'Ligar microfone'); }
+    if (cam) { cam.classList.toggle('is-off', !this.camOn); cam.querySelector('small').textContent = this.camOn ? 'Câmera' : 'Câmera off'; cam.setAttribute('aria-label', this.camOn ? 'Desligar câmera' : 'Ligar câmera'); }
+    if (screen) { const active = Boolean(this.screenTrack); screen.classList.toggle('is-active', active); screen.querySelector('small').textContent = active ? 'Parar tela' : 'Compartilhar'; screen.setAttribute('aria-label', active ? 'Parar compartilhamento' : 'Compartilhar tela'); }
+  },
   async toggleMic() {
     try {
       let track = this.localStream?.getAudioTracks()[0];
@@ -245,6 +287,8 @@ const WebRTCManager = {
         this.micOn = !this.micOn;
         track.enabled = this.micOn;
       }
+      this.playUiSound(this.micOn ? 'unmute' : 'mute');
+      this.refreshCallControls();
       UI.toast(this.micOn ? 'Microfone ativado' : 'Microfone silenciado');
     } catch (err) { this.micOn = false; UI.toast(`Não foi possível ativar o microfone: ${err.message}`, 'error'); }
   },
@@ -253,7 +297,7 @@ const WebRTCManager = {
       if (this.camOn) {
         await this.replaceTrack('video', null);
         if (this.cameraTrack) { this.localStream.removeTrack(this.cameraTrack); this.cameraTrack.stop(); this.cameraTrack = null; }
-        this.camOn = false; this.attachLocalVideo(false); return;
+        this.camOn = false; this.attachLocalVideo(false); this.playUiSound('camera'); this.refreshCallControls(); return;
       }
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       const track = stream.getVideoTracks()[0];
@@ -261,10 +305,11 @@ const WebRTCManager = {
       await this.replaceTrack('video', track);
       this.cameraTrack = track; this.camOn = true; this.attachLocalVideo(true);
       track.onended = () => { this.camOn = false; this.attachLocalVideo(false); };
-      await this.populateDevices();
+      await this.populateDevices(); this.playUiSound('camera'); this.refreshCallControls();
     } catch (err) { UI.toast(`Não foi possível alterar a câmera: ${err.message}`, 'error'); }
   },
   async shareScreen() {
+    if (this.screenTrack) { await this.stopScreenShare(); this.refreshCallControls(); this.playUiSound('share'); return; }
     try {
       this.screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 15 }, audio: false });
       const track = this.screenStream.getVideoTracks()[0];
@@ -272,7 +317,8 @@ const WebRTCManager = {
       await this.replaceTrack('video', track);
       const video = document.getElementById('local-video'); video.srcObject = this.screenStream; video.classList.remove('hidden');
       document.getElementById('local-avatar-placeholder').classList.add('hidden');
-      track.onended = () => this.stopScreenShare().catch(console.error);
+      track.onended = () => this.stopScreenShare().then(() => this.refreshCallControls()).catch(console.error);
+      this.playUiSound('share'); this.refreshCallControls();
     } catch (err) { if (err.name !== 'NotAllowedError') UI.toast(`Compartilhamento indisponível: ${err.message}`, 'error'); }
   },
   async stopScreenShare() {
@@ -280,6 +326,7 @@ const WebRTCManager = {
     this.screenTrack = null; this.screenStream = null;
     if (this.cameraTrack && this.camOn) { await this.replaceTrack('video', this.cameraTrack); this.attachLocalVideo(true); }
     else { await this.replaceTrack('video', null); this.attachLocalVideo(false); }
+    this.refreshCallControls();
   },
   resetPeersForReconnect() {
     [...this.peers.keys()].forEach(socketId => this.removeRemoteTile(socketId));
@@ -294,6 +341,7 @@ const WebRTCManager = {
     document.getElementById(`peer-card-${socketId}`)?.remove();
   },
   async leaveRoom(silent = false) {
+    if (!silent && this.currentRoomId) this.playUiSound('hangup');
     if (this.currentRoomId && API.socket?.connected) API.socket.emit('rtc:leave-room');
     this.peers.forEach((_, sid) => this.removeRemoteTile(sid));
     this.localStream?.getTracks().forEach(t => t.stop());
@@ -305,6 +353,7 @@ const WebRTCManager = {
     document.getElementById('webrtc-stage').classList.add('hidden');
     document.getElementById('webrtc-stage').classList.remove('flex');
     document.getElementById('voice-status-bar').classList.add('hidden');
+    document.getElementById('hc-call-room-title') && (document.getElementById('hc-call-room-title').textContent = 'Chamada em andamento');
     document.getElementById('local-video').srcObject = null;
     document.getElementById('local-video').classList.add('hidden');
     document.getElementById('local-avatar-placeholder').classList.remove('hidden');
