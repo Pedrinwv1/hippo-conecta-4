@@ -5,6 +5,8 @@ const WebRTCManager = {
   screenTrack: null,
   cameraTrack: null,
   currentRoomId: null,
+  livekitRoom: null,
+  sfuMode: false,
   micOn: true,
   camOn: false,
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
@@ -21,6 +23,7 @@ const WebRTCManager = {
     this.currentRoomId = roomId;
     this.micOn = true;
     this.camOn = Boolean(withVideo);
+    if (await this.joinLiveKit(roomId, roomName, withVideo)) return;
     try {
       const config = await API.get('/api/rtc-config');
       this.iceServers = config.iceServers || this.iceServers;
@@ -60,6 +63,85 @@ const WebRTCManager = {
     this.refreshCallControls();
     if (!navigator.mediaDevices?.addEventListener) return;
     navigator.mediaDevices.addEventListener('devicechange', this.onDeviceChange);
+  },
+
+  async joinLiveKit(roomId, roomName, withVideo = false) {
+    const sdk = window.LivekitClient;
+    if (!sdk?.Room || !sdk?.RoomEvent || !sdk?.Track) return false;
+    let config;
+    try { config = await API.get('/api/sfu/config?roomId=' + encodeURIComponent(roomId)); }
+    catch (error) { console.warn('[livekit] SFU indisponível:', error.message); return false; }
+    if (!config?.sfuConfigured || !config.url || !config.token) return false;
+    const room = new sdk.Room({ adaptiveStream: true, dynacast: true, stopLocalTrackOnUnpublish: true });
+    this.livekitRoom = room;
+    room.on(sdk.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+      if (track.kind === sdk.Track.Kind.Audio) {
+        const audio = track.attach(); audio.autoplay = true; audio.setAttribute('playsinline', '');
+        audio.dataset.livekitParticipant = participant.identity; document.body.appendChild(audio);
+      } else if (track.kind === sdk.Track.Kind.Video) this.renderLiveKitVideo(participant, track);
+    });
+    room.on(sdk.RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
+      track.detach().forEach(element => element.remove());
+      if (track.kind === sdk.Track.Kind.Video) document.getElementById('peer-card-' + participant.identity)?.querySelector('video')?.classList.add('hidden');
+    });
+    room.on(sdk.RoomEvent.ParticipantConnected, participant => this.ensureLiveKitTile(participant));
+    room.on(sdk.RoomEvent.ParticipantDisconnected, participant => document.getElementById('peer-card-' + participant.identity)?.remove());
+    room.on(sdk.RoomEvent.ActiveSpeakersChanged, speakers => {
+      document.querySelectorAll('#local-video-card, [id^="peer-card-"]').forEach(card => card.classList.remove('speaking-ring'));
+      speakers.forEach(participant => {
+        const id = participant.identity === room.localParticipant.identity ? 'local-video-card' : 'peer-card-' + participant.identity;
+        document.getElementById(id)?.classList.add('speaking-ring');
+      });
+    });
+    room.on(sdk.RoomEvent.MediaDevicesError, error => UI.toast('Falha no microfone/câmera: ' + (error?.message || 'verifique as permissões.'), 'error'));
+    try {
+      await room.connect(config.url, config.token);
+      this.sfuMode = true; this.micOn = false; this.camOn = false;
+      document.getElementById('webrtc-stage')?.classList.remove('hidden');
+      document.getElementById('webrtc-stage')?.classList.add('flex');
+      document.getElementById('voice-status-bar')?.classList.remove('hidden');
+      const label = document.getElementById('voice-channel-label'); if (label) label.textContent = roomName;
+      const title = document.getElementById('hc-call-room-title'); if (title) title.textContent = roomName;
+      this.ensureLiveKitTile(room.localParticipant, true);
+      await room.localParticipant.setMicrophoneEnabled(true); this.micOn = true;
+      if (withVideo) { await room.localParticipant.setCameraEnabled(true); this.camOn = true; }
+      room.remoteParticipants.forEach(participant => this.ensureLiveKitTile(participant));
+      if (API.socket?.connected) API.socket.emit('rtc:sfu-presence-join', { roomId });
+      await room.startAudio().catch(() => {});
+      this.playUiSound('join'); this.refreshCallControls(); UI.toast('Conectado à chamada LiveKit.');
+      return true;
+    } catch (error) {
+      console.error('[livekit] falha ao entrar:', error);
+      try { room.disconnect(); } catch {}
+      this.livekitRoom = null; this.sfuMode = false; this.currentRoomId = null; this.micOn = false;
+      UI.toast('LiveKit não conseguiu iniciar: ' + (error?.message || 'erro de conexão'), 'error');
+      return false;
+    }
+  },
+  ensureLiveKitTile(participant, local = false) {
+    const id = local ? 'local-video-card' : 'peer-card-' + participant.identity;
+    let card = document.getElementById(id);
+    if (!card && !local) {
+      const grid = document.getElementById('video-grid'); if (!grid) return null;
+      card = document.createElement('div'); card.id = id;
+      card.className = 'relative aspect-video rounded-2xl bg-[#12151f] border border-purple-500/20 overflow-hidden flex items-center justify-center';
+      const avatar = document.createElement('div'); avatar.className = 'rtc-peer-avatar absolute inset-0 flex items-center justify-center pointer-events-none';
+      const name = participant.name || participant.identity || 'Participante';
+      avatar.innerHTML = '<span class="w-16 h-16 rounded-full bg-purple-600/30 text-purple-200 flex items-center justify-center text-xl font-bold">' + this.escapeHTML(name.slice(0,2).toUpperCase()) + '</span>';
+      const label = document.createElement('span'); label.className = 'absolute bottom-2 left-2 px-2.5 py-0.5 rounded bg-black/75 text-xs'; label.textContent = name;
+      card.append(avatar, label); grid.appendChild(card);
+    }
+    return card;
+  },
+  renderLiveKitVideo(participant, track) {
+    const local = participant === this.livekitRoom?.localParticipant;
+    const card = this.ensureLiveKitTile(participant, local); if (!card) return;
+    const video = local ? document.getElementById('local-video') : document.createElement('video');
+    if (!video) return;
+    video.autoplay = true; video.playsInline = true;
+    if (!local) video.className = 'absolute inset-0 w-full h-full object-cover';
+    track.attach(video); if (!local && !video.isConnected) card.prepend(video);
+    video.classList.remove('hidden'); card.querySelector('.rtc-peer-avatar')?.classList.add('hidden');
   },
   onDeviceChange() { WebRTCManager.populateDevices().catch(console.warn); },
   async populateDevices() {
@@ -274,6 +356,7 @@ const WebRTCManager = {
   },
   async toggleMic() {
     try {
+      if (this.sfuMode && this.livekitRoom) { const next = !this.micOn; await this.livekitRoom.localParticipant.setMicrophoneEnabled(next); this.micOn = next; this.playUiSound(next ? 'unmute' : 'mute'); this.refreshCallControls(); UI.toast(next ? 'Microfone ativado' : 'Microfone silenciado'); return; }
       let track = this.localStream?.getAudioTracks()[0];
       if (!track) {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
@@ -294,6 +377,7 @@ const WebRTCManager = {
   },
   async toggleCamera() {
     try {
+      if (this.sfuMode && this.livekitRoom) { const next = !this.camOn; await this.livekitRoom.localParticipant.setCameraEnabled(next); this.camOn = next; this.playUiSound('camera'); this.refreshCallControls(); return; }
       if (this.camOn) {
         await this.replaceTrack('video', null);
         if (this.cameraTrack) { this.localStream.removeTrack(this.cameraTrack); this.cameraTrack.stop(); this.cameraTrack = null; }
@@ -309,6 +393,7 @@ const WebRTCManager = {
     } catch (err) { UI.toast(`Não foi possível alterar a câmera: ${err.message}`, 'error'); }
   },
   async shareScreen() {
+    if (this.sfuMode && this.livekitRoom) { try { const next = !Boolean(this.screenTrack); await this.livekitRoom.localParticipant.setScreenShareEnabled(next); this.screenTrack = next ? true : null; this.playUiSound('share'); this.refreshCallControls(); } catch (err) { if (err.name !== 'NotAllowedError') UI.toast('Compartilhamento indisponível: ' + err.message, 'error'); } return; }
     if (this.screenTrack) { await this.stopScreenShare(); this.refreshCallControls(); this.playUiSound('share'); return; }
     try {
       this.screenStream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 15 }, audio: false });
@@ -322,6 +407,7 @@ const WebRTCManager = {
     } catch (err) { if (err.name !== 'NotAllowedError') UI.toast(`Compartilhamento indisponível: ${err.message}`, 'error'); }
   },
   async stopScreenShare() {
+    if (this.sfuMode && this.livekitRoom) { await this.livekitRoom.localParticipant.setScreenShareEnabled(false); this.screenTrack = null; this.refreshCallControls(); return; }
     if (this.screenTrack) { this.localStream?.removeTrack(this.screenTrack); this.screenTrack.stop(); }
     this.screenTrack = null; this.screenStream = null;
     if (this.cameraTrack && this.camOn) { await this.replaceTrack('video', this.cameraTrack); this.attachLocalVideo(true); }
@@ -329,6 +415,7 @@ const WebRTCManager = {
     this.refreshCallControls();
   },
   resetPeersForReconnect() {
+    if (this.sfuMode) return;
     [...this.peers.keys()].forEach(socketId => this.removeRemoteTile(socketId));
     const grid = document.getElementById('video-grid');
     grid?.querySelectorAll('[id^=\"peer-card-\"]').forEach(el => el.remove());
@@ -342,11 +429,12 @@ const WebRTCManager = {
   },
   async leaveRoom(silent = false) {
     if (!silent && this.currentRoomId) this.playUiSound('hangup');
+    if (this.sfuMode) { if (API.socket?.connected) API.socket.emit('rtc:sfu-presence-leave'); try { this.livekitRoom?.disconnect(); } catch (error) { console.warn('[livekit] disconnect:', error); } this.livekitRoom = null; this.sfuMode = false; document.querySelectorAll('[id^="peer-card-"]').forEach(card => card.remove()); document.querySelectorAll('audio[data-livekit-participant]').forEach(audio => audio.remove()); }
     if (this.currentRoomId && API.socket?.connected) API.socket.emit('rtc:leave-room');
     this.peers.forEach((_, sid) => this.removeRemoteTile(sid));
     this.localStream?.getTracks().forEach(t => t.stop());
     this.screenStream?.getTracks().forEach(t => t.stop());
-    this.localStream = null; this.screenStream = null; this.screenTrack = null; this.cameraTrack = null; this.currentRoomId = null; this.camOn = false; this.micOn = true;
+    this.localStream = null; this.screenStream = null; this.screenTrack = null; this.cameraTrack = null; this.currentRoomId = null; this.sfuMode = false; this.camOn = false; this.micOn = true;
     this.analysers.forEach(a => a.source.disconnect()); this.analysers.clear();
     if (this.animationFrame) cancelAnimationFrame(this.animationFrame); this.animationFrame = null;
     navigator.mediaDevices?.removeEventListener?.('devicechange', this.onDeviceChange);
