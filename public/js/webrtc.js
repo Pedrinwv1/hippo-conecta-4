@@ -73,20 +73,26 @@ const WebRTCManager = {
     let room = null, micTrack = null, cameraTrack = null;
     try {
       // Permissão/captura do microfone ocorre em paralelo à emissão do token.
-      const [config, micResult, cameraResult] = await Promise.all([
+      const [configResult, micResult, cameraResult] = await Promise.allSettled([
         API.get('/api/sfu/config?roomId=' + encodeURIComponent(roomId)),
-        sdk.createLocalAudioTrack({ echoCancellation: true, noiseSuppression: true, autoGainControl: true }).then(track => ({ track })).catch(error => ({ error })),
+        sdk.createLocalAudioTrack({ echoCancellation: true, noiseSuppression: true, autoGainControl: true }),
         withVideo && typeof sdk.createLocalVideoTrack === 'function'
-          ? sdk.createLocalVideoTrack({ resolution: { width: 1280, height: 720 }, frameRate: 30 }).then(track => ({ track })).catch(error => ({ error }))
+          ? sdk.createLocalVideoTrack({ resolution: { width: 1280, height: 720 }, frameRate: 30 })
           : Promise.resolve(null)
       ]);
+      micTrack = micResult.status === 'fulfilled' ? micResult.value : null;
+      cameraTrack = cameraResult.status === 'fulfilled' ? cameraResult.value : null;
+      if (configResult.status !== 'fulfilled') {
+        micTrack?.stop(); cameraTrack?.stop();
+        throw configResult.reason;
+      }
+      const config = configResult.value;
       if (!config?.sfuConfigured || !config.url || !config.token) {
-        micResult.track?.stop(); cameraResult?.track?.stop();
+        micTrack?.stop(); cameraTrack?.stop();
         return false;
       }
-      micTrack = micResult.track || null; cameraTrack = cameraResult?.track || null;
-      if (!micTrack) UI.toast('Não foi possível abrir o microfone: ' + (micResult.error?.message || 'permissão negada'), 'error');
-      if (withVideo && !cameraTrack) UI.toast('Câmera indisponível: ' + (cameraResult?.error?.message || 'verifique a permissão.'), 'error');
+      if (!micTrack) UI.toast('Não foi possível abrir o microfone: ' + ((micResult.status === 'rejected' ? micResult.reason?.message : 'permissão negada') || 'permissão negada'), 'error');
+      if (withVideo && !cameraTrack) UI.toast('Câmera indisponível: ' + ((cameraResult?.status === 'rejected' ? cameraResult.reason?.message : 'verifique a permissão.') || 'verifique a permissão.'), 'error');
 
       room = new sdk.Room({ adaptiveStream: true, dynacast: true, stopLocalTrackOnUnpublish: true });
       this.livekitRoom = room;
