@@ -1001,3 +1001,87 @@ body{background-image:radial-gradient(ellipse at 0% 0%,rgba(124,58,237,.22),tran
 #messages-container a{cursor:pointer}
 #messages-container button[data-action="copy"]{opacity:.75}
 @media(hover:none){#messages-container button[data-action="copy"]{opacity:1}}
+
+
+/* ===== HIPPO CONECTA 5.6 — Obsidian Purple + chamada premium ===== */
+:root{--hc-accent:#7C3AED;--hc-accent-2:#A78BFA;--hc-bg:#08060e;--hc-surface:#120d1c;--hc-stroke:rgba(167,139,250,.2)}
+html,body,#app-shell{background:#08060e!important;color:#f8f5ff!important}
+body{background-image:radial-gradient(ellipse at 10% 0%,rgba(124,58,237,.18),transparent 40%),radial-gradient(ellipse at 95% 100%,rgba(124,58,237,.12),transparent 38%)!important}
+#auth-screen{background:radial-gradient(ellipse at 50% 20%,rgba(124,58,237,.3),transparent 55%),#08060e!important}
+#auth-screen>div{background:linear-gradient(145deg,#1b1029,#0b0811 75%)!important;border:1px solid rgba(167,139,250,.3)!important}
+#app-shell>nav,#app-shell>aside{background:linear-gradient(180deg,#130d1e,#0a0810)!important;border-color:rgba(124,58,237,.25)!important}
+#app-shell>section,#app-shell>section>header,#messages-container,#app-shell>section>form{background:#0b0811!important}
+#app-shell>section>header{border-bottom:1px solid rgba(124,58,237,.22)!important}
+#channel-list-container button:hover,#messages-container article:hover{background:rgba(124,58,237,.09)!important;border-color:rgba(167,139,250,.18)!important}
+#app-shell button.bg-purple-600,#app-shell>section>header button,#app-shell>section>form>button[type=submit],.settings-primary{background:linear-gradient(135deg,#8B5CF6,#6D28D9)!important;color:white!important;border-color:rgba(196,181,253,.28)!important;box-shadow:0 8px 26px rgba(124,58,237,.2)!important}
+.hc-login-logo,.hc-side-logo,.hc-splash img{filter:none!important;-webkit-filter:none!important;mask:none!important;-webkit-mask:none!important;object-fit:contain!important;object-position:center!important}
+.hc-login-logo{width:210px!important;height:210px!important}
+.hc-side-logo{background:transparent!important;border:1px solid rgba(167,139,250,.35)!important;box-shadow:0 0 22px rgba(124,58,237,.2)!important}
+.hc-splash{background:#08060e!important}
+.hc-splash-bar span{background:#7C3AED!important;box-shadow:0 0 14px #7C3AED!important}
+
+/* Chamada imersiva */
+.hc-call-stage{position:fixed!important;inset:0!important;z-index:11000!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;background:radial-gradient(ellipse at 50% -15%,rgba(124,58,237,.27),transparent 52%),linear-gradient(145deg,#10091a,#08060e 62%,#10091b)!important;color:#f8f5ff!important}
+.hc-call-stage.hidden{display:none!important}
+.hc-call-header{height:76px;flex:0 0 76px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 30px;border-bottom:1px solid rgba(167,139,250,.14);background:rgba(10,7,16,.78);backdrop-filter:blur(22px)}
+.hc-call-brand{display:flex;align-items:center;gap:12px;min-width:190px}
+.hc-call-brand-mark{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#A855F7,#6D28D9);font-size:20px;font-weight:900;box-shadow:0 7px 24px rgba(124,58,237,.35)}
+.hc-call-brand strong,.hc-call-footer-info strong{display:block;font-size:12px;letter-spacing:.12em}
+.hc-call-brand small,.hc-call-footer-info small{display:block;margin-top:4px;color:#a99dbb;font-size:11px}
+.hc-call-live{display:flex;align-items:center;gap:9px;padding:9px 13px;border:1px solid rgba(167,139,250,.2);border-radius:999px;background:rgba(124,58,237,.09);font-size:10px;letter-spacing:.1em}
+.hc-call-live i,.hc-call-online-dot{width:7px;height:7px;border-radius:50%;background:#a78bfa;box-shadow:0 0 12px #a78bfa}
+.hc-call-live b{margin-left:8px;color:#a99dbb;font-weight:500;letter-spacing:0}
+.hc-call-device-selects{display:flex;align-items:center;gap:7px}
+.hc-call-device-selects label{font-size:9px;letter-spacing:.1em;color:#8f819f}
+.hc-call-device-selects select{max-width:155px;min-width:80px;padding:9px 10px;border-radius:10px;background:#171020;color:#e9ddff;border:1px solid rgba(167,139,250,.18);font-size:11px}
+.hc-call-main{flex:1;min-height:0;display:flex;flex-direction:column;padding:26px clamp(18px,4vw,64px) 22px;overflow:hidden}
+.hc-call-stage-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:0 auto 22px;width:100%;max-width:1500px}
+.hc-call-eyebrow{font-size:9px;letter-spacing:.24em;color:#b794f6;font-weight:800}
+.hc-call-stage-heading h2{margin:7px 0 4px;font-size:clamp(21px,2.4vw,30px);font-weight:750;letter-spacing:-.04em}
+.hc-call-stage-heading p{color:#a99dbb;font-size:12px}
+.hc-call-encryption{padding:9px 13px;border:1px solid rgba(167,139,250,.16);border-radius:12px;color:#bdb0d0;font-size:10px;background:rgba(255,255,255,.025)}
+.hc-call-encryption span{color:#c4a5fd;margin-right:5px}
+.hc-call-grid{width:100%;max-width:1500px;min-height:0;flex:1;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));grid-auto-rows:minmax(220px,1fr);gap:16px;overflow-y:auto;align-content:center}
+.hc-call-tile{position:relative;min-height:220px;aspect-ratio:16/9;border-radius:22px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#28163e,#100b19 65%);border:1px solid rgba(167,139,250,.23);box-shadow:0 18px 60px rgba(0,0,0,.26),inset 0 1px rgba(255,255,255,.04)}
+.hc-call-tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hc-call-avatar-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(circle at 50% 35%,rgba(124,58,237,.22),transparent 48%)}
+.hc-call-avatar{width:88px;height:88px;border-radius:28px;display:grid;place-items:center;background:linear-gradient(145deg,#A855F7,#5B21B6);border:2px solid rgba(221,214,254,.35);box-shadow:0 0 45px rgba(124,58,237,.28);font-size:28px;font-weight:800}
+.hc-call-avatar-placeholder strong{font-size:14px}
+.hc-call-avatar-placeholder>span{font-size:11px;color:#a99dbb}
+.hc-call-tile-caption{position:absolute;left:13px;right:13px;bottom:12px;display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:rgba(8,6,14,.72);backdrop-filter:blur(12px);font-size:11px}
+.hc-call-tile-caption small{margin-left:auto;color:#b5a9c3;font-size:9px}
+.hc-call-speaking-dot{width:7px;height:7px;border-radius:50%;background:#A78BFA;box-shadow:0 0 10px #A78BFA}
+.hc-call-footer{width:100%;max-width:1500px;margin:18px auto 0;min-height:82px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 18px;border:1px solid rgba(167,139,250,.2);border-radius:20px;background:rgba(19,12,29,.82);box-shadow:0 16px 50px rgba(0,0,0,.28);backdrop-filter:blur(20px)}
+.hc-call-footer-info{display:flex;align-items:center;gap:10px;min-width:190px}
+.hc-call-secure-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:13px;background:rgba(124,58,237,.18);color:#c4a5fd;font-size:18px}
+.hc-call-controls{display:flex;align-items:center;justify-content:center;gap:12px}
+.hc-call-control{width:70px;min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid rgba(196,181,253,.17);border-radius:16px;background:linear-gradient(145deg,#241632,#171020);color:#eee5ff;transition:transform .16s,border-color .16s,background .16s}
+.hc-call-control:hover{transform:translateY(-3px);border-color:rgba(196,181,253,.55);background:linear-gradient(145deg,#38204f,#21132f)}
+.hc-call-control .hc-control-icon{font-size:20px;line-height:1}
+.hc-call-control small{font-size:9px;color:#c7b8d8}
+.hc-call-control.is-off{background:#25131c;border-color:rgba(251,113,133,.35);color:#fda4af}
+.hc-call-control.is-active{background:linear-gradient(145deg,#7C3AED,#5B21B6);border-color:#a78bfa}
+.hc-call-hangup{background:linear-gradient(145deg,#e11d48,#9f1239);border-color:rgba(251,113,133,.45);color:white}
+.hc-call-hangup:hover{background:linear-gradient(145deg,#f43f5e,#be123c)}
+.hc-call-hangup small{color:white}
+.hc-call-footer-meta{display:flex;align-items:center;gap:8px;min-width:190px;justify-content:flex-end;color:#a99dbb;font-size:10px}
+@media(max-width:760px){
+ .hc-call-header{height:auto;min-height:68px;flex-wrap:wrap;padding:12px 14px;gap:10px}
+ .hc-call-brand{min-width:0}.hc-call-live{margin-left:auto}
+ .hc-call-device-selects{width:100%;justify-content:flex-end}.hc-call-device-selects select{flex:1;max-width:45%}
+ .hc-call-main{padding:18px 12px 12px}
+ .hc-call-stage-heading{align-items:flex-start;margin-bottom:14px}.hc-call-encryption{display:none}
+ .hc-call-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));grid-auto-rows:minmax(190px,auto);gap:10px}
+ .hc-call-tile{min-height:190px;border-radius:17px}
+ .hc-call-footer{flex-direction:column;gap:10px;padding:12px;border-radius:17px}
+ .hc-call-footer-info,.hc-call-footer-meta{display:none}
+ .hc-call-controls{width:100%;gap:8px}
+ .hc-call-control{width:25%;min-height:58px;border-radius:14px}
+}
+@media(max-height:650px) and (min-width:761px){
+ .hc-call-main{padding-top:12px;padding-bottom:10px}
+ .hc-call-stage-heading{margin-bottom:10px}
+ .hc-call-stage-heading h2{font-size:22px}
+ .hc-call-footer{min-height:68px;margin-top:10px}
+ .hc-call-control{min-height:52px}
+}
