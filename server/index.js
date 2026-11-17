@@ -443,6 +443,21 @@ io.on('connection', socket => {
     } catch (err) { socketAck(ack, { ok: false, error: err.message }); }
   });
 
+
+  socket.on('rtc:sfu-presence-join', async ({ roomId } = {}, ack) => {
+    try {
+      const id = String(roomId || '');
+      const db = readDB();
+      const allowed = db.servers.some(server => server.members.some(member => member.userId === socket.user.id) && server.channels.some(channel => channel.id === id && channel.type === 'voice'));
+      if (!allowed) return socketAck(ack, { ok: false, error: 'Canal de voz não encontrado ou sem permissão.' });
+      leaveVoiceRoom(socket);
+      socket.currentRoom = id;
+      await socket.join(id);
+      notifyFriendsPresence();
+      socketAck(ack, { ok: true });
+    } catch (error) { socketAck(ack, { ok: false, error: 'Não foi possível atualizar presença da chamada.' }); }
+  });
+  socket.on('rtc:sfu-presence-leave', () => leaveVoiceRoom(socket));
   socket.on('rtc:join-room', async ({ roomId } = {}, ack) => {
     try {
       const id = String(roomId || '');
