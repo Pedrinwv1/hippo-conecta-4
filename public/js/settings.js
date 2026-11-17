@@ -44,18 +44,74 @@ const Settings = {
       UI.toast('Dados da conta atualizados.');
     } catch (err) { UI.toast(err.message, 'error'); }
   },
+  cropImage: null,
+  cropFileName: 'avatar.jpg',
+  cropZoom: 1,
+  cropX: 0,
+  cropY: 0,
+  cropPointer: null,
+  cropObjectUrl: null,
   async uploadAvatar(event) {
     const file = event.target.files?.[0];
     if (!file) return;
     if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) { UI.toast('Escolha uma imagem JPG, PNG, WEBP ou GIF.', 'error'); event.target.value = ''; return; }
     if (file.size > 4 * 1024 * 1024) { UI.toast('A imagem deve ter no máximo 4 MB.', 'error'); event.target.value = ''; return; }
     try {
-      const form = new FormData(); form.append('avatar', file);
-      const result = await API.post('/api/profile/avatar', form);
-      this.applyUser(result.user);
-      UI.toast('Foto de perfil atualizada.');
-    } catch (err) { UI.toast(err.message, 'error'); }
+      const image = new Image();
+      this.cropObjectUrl = URL.createObjectURL(file);
+      image.src = this.cropObjectUrl;
+      await new Promise((resolve, reject) => { image.onload = resolve; image.onerror = () => reject(new Error('Não foi possível abrir essa imagem.')); });
+      this.cropImage = image; this.cropFileName = file.name || 'avatar.jpg';
+      this.cropZoom = 1; this.cropX = 0; this.cropY = 0;
+      this.drawCropPreview();
+      document.getElementById('avatar-crop-zoom').value = '1';
+      document.getElementById('modal-avatar-crop').classList.remove('hidden');
+    } catch (err) { UI.toast(err.message, 'error'); this.clearCrop(); }
     finally { event.target.value = ''; }
+  },
+  drawCropPreview() {
+    const canvas = document.getElementById('avatar-crop-canvas');
+    if (!canvas || !this.cropImage) return;
+    const ctx = canvas.getContext('2d'), size = canvas.width, image = this.cropImage;
+    const scale = Math.max(size / image.width, size / image.height) * this.cropZoom;
+    const width = image.width * scale, height = image.height * scale;
+    const maxX = Math.max(0, (width - size) / 2), maxY = Math.max(0, (height - size) / 2);
+    this.cropX = Math.min(maxX, Math.max(-maxX, this.cropX));
+    this.cropY = Math.min(maxY, Math.max(-maxY, this.cropY));
+    ctx.clearRect(0, 0, size, size); ctx.fillStyle = '#101018'; ctx.fillRect(0, 0, size, size);
+    ctx.drawImage(image, (size - width) / 2 + this.cropX, (size - height) / 2 + this.cropY, width, height);
+  },
+  setCropZoom(value) { this.cropZoom = Number(value) || 1; this.drawCropPreview(); },
+  startCropDrag(event) {
+    if (!this.cropImage) return;
+    event.preventDefault(); this.cropPointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  },
+  moveCropDrag(event) {
+    if (!this.cropPointer || event.pointerId !== this.cropPointer.id) return;
+    const rect = event.currentTarget.getBoundingClientRect(), factor = 640 / rect.width;
+    this.cropX += (event.clientX - this.cropPointer.x) * factor;
+    this.cropY += (event.clientY - this.cropPointer.y) * factor;
+    this.cropPointer.x = event.clientX; this.cropPointer.y = event.clientY; this.drawCropPreview();
+  },
+  endCropDrag() { this.cropPointer = null; },
+  clearCrop() { if (this.cropObjectUrl) URL.revokeObjectURL(this.cropObjectUrl); this.cropObjectUrl = null; this.cropImage = null; this.cropPointer = null; },
+  cancelCrop() { document.getElementById('modal-avatar-crop')?.classList.add('hidden'); this.clearCrop(); },
+  async confirmCrop() {
+    if (!this.cropImage) return;
+    const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
+    canvas.getContext('2d').drawImage(document.getElementById('avatar-crop-canvas'), 0, 0, 512, 512);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.88));
+    if (!blob) return UI.toast('Não foi possível preparar a imagem.', 'error');
+    const button = document.getElementById('avatar-crop-confirm');
+    button.disabled = true; button.textContent = 'Salvando...';
+    try {
+      const form = new FormData(); form.append('avatar', blob, this.cropFileName.replace(/\.[^.]+$/, '') + '.jpg');
+      const result = await API.post('/api/profile/avatar', form);
+      this.applyUser(result.user); UI.toast('Foto de perfil atualizada.');
+      document.getElementById('modal-avatar-crop').classList.add('hidden'); this.clearCrop();
+    } catch (err) { UI.toast(err.message, 'error'); }
+    finally { button.disabled = false; button.textContent = 'Usar esta foto'; }
   },
   async removeAvatar() {
     try {
