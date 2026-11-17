@@ -78,7 +78,7 @@ jobs:
           for permission in permissions:
               tag = f'<uses-permission android:name="{permission}" />'
               if tag not in manifest:
-                  manifest = manifest.replace("<application", f"    {tag}\\n    <application", 1)
+                  manifest = manifest.replace("<application", f"    {tag}\n    <application", 1)
           def add_application_flags(match):
               attrs = match.group(1)
               if "android:hardwareAccelerated=" not in attrs:
@@ -86,14 +86,14 @@ jobs:
               if "android:usesCleartextTraffic=" not in attrs:
                   attrs += ' android:usesCleartextTraffic="false"'
               return "<application" + attrs + ">"
-          manifest = re.sub(r"<application\\b([^>]*)>", add_application_flags, manifest, count=1)
+          manifest = re.sub(r"<application\b([^>]*)>", add_application_flags, manifest, count=1)
           def add_activity_resize(match):
               tag = match.group(0)
               if "android:windowSoftInputMode=" not in tag:
                   tag = tag[:-1] + ' android:windowSoftInputMode="adjustResize">'
               return tag
           manifest = re.sub(
-              r'<activity\\b(?=[^>]*android:name="[^"]*MainActivity")[^>]*>',
+              r'<activity\b(?=[^>]*android:name="[^"]*MainActivity")[^>]*>',
               add_activity_resize,
               manifest,
               count=1
