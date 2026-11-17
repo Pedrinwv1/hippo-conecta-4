@@ -127,7 +127,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HIPPO_CONECTA_5.6.0_APK
+          name: HIPPO_CONECTA_5.7.0_APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
@@ -150,14 +150,14 @@ jobs:
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: HIPPO_CONECTA_5.6.0_EXE
+          name: HIPPO_CONECTA_5.7.0_EXE
           path: release/*.exe
           if-no-files-found: error
           retention-days: 14
 
   publish-release:
-    name: Publish public HIPPO CONECTA 5.6.0 beta
-    if: github.event_name == 'push' && github.event.head_commit.message == 'Launch HIPPO CONECTA 5.6.0 beta downloads'
+    name: Publish public HIPPO CONECTA 5.7.0 beta
+    if: github.event_name == 'push' && github.event.head_commit.message == 'Launch HIPPO CONECTA 5.7.0 beta downloads'
     needs: [android-apk, windows-exe]
     runs-on: ubuntu-latest
     permissions:
@@ -166,18 +166,18 @@ jobs:
       - name: Download Android APK from this build
         uses: actions/download-artifact@v4
         with:
-          name: HIPPO_CONECTA_5.6.0_APK
+          name: HIPPO_CONECTA_5.7.0_APK
           path: release-files
       - name: Download Windows EXE from this build
         uses: actions/download-artifact@v4
         with:
-          name: HIPPO_CONECTA_5.6.0_EXE
+          name: HIPPO_CONECTA_5.7.0_EXE
           path: release-files
       - name: Publish public beta release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v5.6.0
-          name: HIPPO CONECTA 5.6.0 Beta
+          tag_name: v5.7.0
+          name: HIPPO CONECTA 5.7.0 Beta
           prerelease: true
           generate_release_notes: true
           make_latest: false
