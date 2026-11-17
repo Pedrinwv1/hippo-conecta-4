@@ -55,6 +55,8 @@ jobs:
         run: npm ci
       - name: Generate Android project
         run: npx cap add android
+      - name: Install image processing tools
+        run: sudo apt-get update && sudo apt-get install -y imagemagick
       - name: Configure Android permissions and launcher icon
         shell: bash
         run: |
@@ -102,7 +104,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: HIPPO_CONECTA_5.2.0_APK
+          name: HIPPO_CONECTA_5.3.0_APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
@@ -125,7 +127,36 @@ jobs:
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: HIPPO_CONECTA_5.2.0_EXE
+          name: HIPPO_CONECTA_5.3.0_EXE
           path: release/*.exe
           if-no-files-found: error
           retention-days: 14
+
+  publish-release:
+    name: Publish public GitHub release
+    if: github.event_name == 'workflow_dispatch'
+    needs: [android-apk, windows-exe]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Android APK
+        uses: actions/download-artifact@v4
+        with:
+          name: HIPPO_CONECTA_5.3.0_APK
+          path: release-files
+      - name: Download Windows EXE
+        uses: actions/download-artifact@v4
+        with:
+          name: HIPPO_CONECTA_5.3.0_EXE
+          path: release-files
+      - name: Publish public release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v5.3.0
+          name: HIPPO CONECTA 5.3.0
+          generate_release_notes: true
+          make_latest: true
+          files: |
+            release-files/*.apk
+            release-files/*.exe
