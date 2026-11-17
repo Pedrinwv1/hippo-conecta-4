@@ -136,7 +136,7 @@ jobs:
 
   publish-release:
     name: Publish public GitHub release
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && github.event.head_commit.message == 'Launch HIPPO CONECTA 5.3.0 public installers'
     needs: [android-apk, windows-exe]
     runs-on: ubuntu-latest
     permissions:
