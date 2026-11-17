@@ -10,10 +10,10 @@
   "theme_color": "#7C3AED",
   "icons": [
     {
-      "src": "/img/hippo-brand.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "/img/logo-full-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }
