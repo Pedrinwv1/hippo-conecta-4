@@ -49,6 +49,7 @@ const Auth = {
       document.getElementById('reg-verification-email').textContent = res.email;
       document.getElementById('reg-code').focus();
       document.getElementById('reg-submit').classList.add('hidden');
+      document.getElementById('reg-verify-submit').classList.remove('hidden');
       error.textContent = res.message || 'Código enviado. Confira sua caixa de entrada e o spam.';
       error.classList.remove('hidden');
       error.classList.remove('text-rose-400'); error.classList.add('text-emerald-400');
