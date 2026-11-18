@@ -1,8 +1,8 @@
 {
   "name": "hippo-conecta",
-  "version": "5.7.2",
+  "version": "5.7.3",
   "private": true,
-  "description": "HIPPO CONECTA 5.7.2 — entrada rápida no LiveKit e inicialização antecipada do microfone",
+  "description": "HIPPO CONECTA 5.7.3 — verificação de e-mail obrigatória no cadastro",
   "main": "electron/main.js",
   "scripts": {
     "start": "npm run build:css && node server/index.js",
