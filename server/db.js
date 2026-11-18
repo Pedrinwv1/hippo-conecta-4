@@ -4,6 +4,7 @@ const path = require('node:path');
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data.json');
 const defaultState = {
   users: [],
+  pendingRegistrations: [],
   servers: [{
     id: 'srv-hq', name: 'Hippo Conecta Oficial', icon: 'HC', inviteCode: 'HIPO-PRO',
     channels: [
@@ -24,6 +25,7 @@ const clone = value => JSON.parse(JSON.stringify(value));
 function normalizeState(parsed = {}) {
   return {
     users: Array.isArray(parsed.users) ? parsed.users : [],
+    pendingRegistrations: Array.isArray(parsed.pendingRegistrations) ? parsed.pendingRegistrations : [],
     servers: Array.isArray(parsed.servers) ? parsed.servers : clone(defaultState.servers),
     messages: parsed.messages && typeof parsed.messages === 'object' && !Array.isArray(parsed.messages) ? parsed.messages : {}
   };
