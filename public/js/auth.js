@@ -36,13 +36,42 @@ const Auth = {
 
   async handleRegister(e) {
     e.preventDefault();
+    const error = document.getElementById('reg-error');
+    error.classList.add('hidden');
     try {
-      const res = await API.post('/api/auth/register', { name: document.getElementById('reg-name').value, email: document.getElementById('reg-email').value, password: document.getElementById('reg-password').value });
+      const res = await API.post('/api/auth/register', {
+        name: document.getElementById('reg-name').value,
+        email: document.getElementById('reg-email').value,
+        password: document.getElementById('reg-password').value
+      });
+      document.getElementById('reg-identity-fields').classList.add('hidden');
+      document.getElementById('reg-verification').classList.remove('hidden');
+      document.getElementById('reg-verification-email').textContent = res.email;
+      document.getElementById('reg-code').focus();
+      document.getElementById('reg-submit').classList.add('hidden');
+      error.textContent = res.message || 'Código enviado. Confira sua caixa de entrada e o spam.';
+      error.classList.remove('hidden');
+      error.classList.remove('text-rose-400'); error.classList.add('text-emerald-400');
+    } catch (err) {
+      error.textContent = err.message; error.classList.remove('hidden');
+      error.classList.remove('text-emerald-400'); error.classList.add('text-rose-400');
+    }
+  },
+
+  async verifyRegistration(e) {
+    e.preventDefault();
+    const error = document.getElementById('reg-error');
+    error.classList.add('hidden');
+    try {
+      const res = await API.post('/api/auth/verify-email', {
+        email: document.getElementById('reg-email').value,
+        code: document.getElementById('reg-code').value
+      });
       API.setToken(res.token);
       this.enterApp(await API.get('/api/bootstrap'));
     } catch (err) {
-      const el = document.getElementById('reg-error');
-      el.textContent = err.message; el.classList.remove('hidden');
+      error.textContent = err.message; error.classList.remove('hidden');
+      error.classList.remove('text-emerald-400'); error.classList.add('text-rose-400');
     }
   },
 
