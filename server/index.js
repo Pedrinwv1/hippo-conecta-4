@@ -90,25 +90,87 @@ function socketAck(ack, payload) { if (typeof ack === 'function') ack(payload); 
 
 app.get('/healthz', (req, res) => res.json({ ok: true, service: 'hippo-conecta', timestamp: new Date().toISOString() }));
 
-app.post('/api/auth/register', rateLimit({ max: 8 }), async (req, res, next) => {
+async function sendVerificationEmail(email, name, code) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM;
+  if (!apiKey || !from) {
+    const error = new Error('A verificação por e-mail ainda não está configurada no servidor. Configure RESEND_API_KEY e EMAIL_FROM.');
+    error.status = 503;
+    throw error;
+  }
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from,
+      to: [email],
+      subject: 'Seu código de verificação — HIPPO CONECTA',
+      html: `<div style="font-family:Arial,sans-serif;background:#0b0712;color:#f8fafc;padding:32px;border-radius:16px;max-width:520px;margin:auto"><h1 style="color:#a78bfa">HIPPO CONECTA</h1><p>Olá, ${String(name).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}!</p><p>Use este código para confirmar seu e-mail e concluir a criação da conta:</p><div style="font-size:32px;letter-spacing:10px;font-weight:bold;background:#211332;padding:18px;text-align:center;border-radius:12px">${code}</div><p>O código expira em 10 minutos. Se você não solicitou, ignore esta mensagem.</p></div>`
+    })
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    console.error('[email] Resend recusou o envio:', response.status, detail.slice(0, 500));
+    const error = new Error('Não foi possível enviar o código. Confira o endereço e tente novamente mais tarde.');
+    error.status = 502;
+    throw error;
+  }
+}
+
+app.post('/api/auth/register', rateLimit({ windowMs: 10 * 60 * 1000, max: 5 }), async (req, res, next) => {
   try {
     const name = String(req.body.name || '').trim().slice(0, 40);
     const email = String(req.body.email || '').trim().toLowerCase().slice(0, 254);
     const password = String(req.body.password || '');
-    if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8 || password.length > 128) {
+    if (name.length < 2 || !/^\\S+@\\S+\\.\\S+$/.test(email) || password.length < 8 || password.length > 128) {
       return res.status(400).json({ error: 'Informe nome, e-mail válido e senha de 8 a 128 caracteres.' });
     }
+    if (readDB().users.some(user => user.email === email)) return res.status(409).json({ error: 'Este e-mail já possui uma conta. Entre ou use outro endereço.' });
+    const now = Date.now();
+    const existing = (readDB().pendingRegistrations || []).find(item => item.email === email);
+    if (existing && existing.resendAt > now) return res.status(429).json({ error: 'Aguarde 60 segundos antes de solicitar outro código.' });
+    const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
+    const codeHash = crypto.createHash('sha256').update(email + ':' + code + ':' + JWT_SECRET).digest('hex');
     const passwordHash = await bcrypt.hash(password, 12);
-    const user = { id: uuidv4(), name, email, passwordHash, createdAt: new Date().toISOString() };
+    await sendVerificationEmail(email, name, code);
     await updateDB(db => {
-      if (db.users.some(u => u.email === email)) {
-        const error = new Error('E-mail já cadastrado.'); error.status = 409; throw error;
-      }
+      db.pendingRegistrations ||= [];
+      db.pendingRegistrations = db.pendingRegistrations.filter(item => item.email !== email && item.expiresAt > now);
+      db.pendingRegistrations.push({ id: uuidv4(), name, email, passwordHash, codeHash, attempts: 0, createdAt: now, expiresAt: now + 10 * 60 * 1000, resendAt: now + 60 * 1000 });
+    });
+    res.status(202).json({ verificationRequired: true, email, message: 'Enviamos um código de 6 dígitos para seu e-mail. Ele expira em 10 minutos.' });
+  } catch (err) { next(err); }
+});
+
+app.post('/api/auth/verify-email', rateLimit({ windowMs: 10 * 60 * 1000, max: 12 }), async (req, res, next) => {
+  try {
+    const email = String(req.body.email || '').trim().toLowerCase().slice(0, 254);
+    const code = String(req.body.code || '').replace(/\\D/g, '').slice(0, 6);
+    if (!/^\\S+@\\S+\\.\\S+$/.test(email) || !/^\\d{6}$/.test(code)) return res.status(400).json({ error: 'Informe o e-mail e o código de 6 dígitos.' });
+    let pending = (readDB().pendingRegistrations || []).find(item => item.email === email);
+    if (!pending) return res.status(400).json({ error: 'Solicitação não encontrada. Comece o cadastro novamente.' });
+    if (pending.expiresAt <= Date.now()) {
+      await updateDB(db => { db.pendingRegistrations = (db.pendingRegistrations || []).filter(item => item.email !== email); });
+      return res.status(410).json({ error: 'O código expirou. Solicite um novo código.' });
+    }
+    if (pending.attempts >= 5) {
+      await updateDB(db => { db.pendingRegistrations = (db.pendingRegistrations || []).filter(item => item.email !== email); });
+      return res.status(429).json({ error: 'Limite de tentativas atingido. Inicie o cadastro novamente.' });
+    }
+    const submittedHash = crypto.createHash('sha256').update(email + ':' + code + ':' + JWT_SECRET).digest('hex');
+    if (!crypto.timingSafeEqual(Buffer.from(submittedHash, 'hex'), Buffer.from(pending.codeHash, 'hex'))) {
+      await updateDB(db => { const item = (db.pendingRegistrations || []).find(value => value.email === email); if (item) item.attempts += 1; });
+      return res.status(400).json({ error: 'Código incorreto. Confira a mensagem e tente novamente.' });
+    }
+    const user = { id: uuidv4(), name: pending.name, email, passwordHash: pending.passwordHash, emailVerified: true, emailVerifiedAt: new Date().toISOString(), createdAt: new Date().toISOString() };
+    await updateDB(db => {
+      db.pendingRegistrations = (db.pendingRegistrations || []).filter(item => item.email !== email);
+      if (db.users.some(item => item.email === email)) { const error = new Error('Este e-mail já possui uma conta.'); error.status = 409; throw error; }
       db.users.push(user);
       const official = db.servers[0];
-      if (official && !official.members.some(m => m.userId === user.id)) official.members.push({ userId: user.id, name, role: 'Membro' });
+      if (official && !official.members.some(member => member.userId === user.id)) official.members.push({ userId: user.id, name: user.name, role: 'Membro' });
     });
-    const token = jwt.sign({ id: user.id, email, name }, JWT_SECRET, { expiresIn: '7d', issuer: 'hippo-conecta' });
+    const token = jwt.sign({ id: user.id, email, name: user.name }, JWT_SECRET, { expiresIn: '7d', issuer: 'hippo-conecta' });
     res.status(201).json({ token, user: publicUser(user) });
   } catch (err) { next(err); }
 });
